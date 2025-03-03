@@ -13,7 +13,7 @@ MAGENTA: str = '\033[35m'
 CYAN: str = '\033[36m'
 RESET: str = '\033[39m'
 CLEAR: str = 'cls' if platform.system() == 'Windows' else 'clear'
-BIN: str = os.path.join(os.path.dirname(__file__), 'bin', 'ffmpeg')
+BIN: str = os.path.join(os.path.dirname(__file__), 'bin', 'ffmpeg', 'ffmpeg-7.1-essentials_build', 'bin')
 
 
 def get_referenced_folder(folder_name: str):
