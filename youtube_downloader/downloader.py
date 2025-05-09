@@ -1,8 +1,13 @@
+from datetime import timedelta
 import os.path
 import platform
 
 import yt_dlp
-from youtube_downloader.utils import get_referenced_folder
+from youtube_downloader.utils import get_referenced_folder, get_ffmpeg_path, download_latest_ffmpeg
+
+
+def format_duration(seconds):
+    return str(timedelta(seconds=seconds))
 
 
 class Downloader:
@@ -12,9 +17,11 @@ class Downloader:
             'format': 'best',  # Default to best quality
             'quiet': True,
             'outtmpl': self.path,
-            # 'progress_hooks': [self.progress_hook],
+            'ffmpeg_location': get_ffmpeg_path(),
+            'progress_hooks': [self.progress_hook],
         }
-        self.info: dict = yt_dlp.YoutubeDL(self.ytdlp_options).extract_info(url,download=False)
+        self.info: dict = yt_dlp.YoutubeDL(
+            self.ytdlp_options).extract_info(url, download=False)
 
     @property
     def path(self):
@@ -30,12 +37,38 @@ class Downloader:
                 app_name)
         return os.path.normpath(base_path)
 
-    def download(self) -> str:
-        print(self.ytdlp_options['outtmpl'])
+    def get_video_formats(self) -> list[dict]:
+        formats = []
+        for f in self.info.get('formats', []):
+            if f.get('vcodec') != 'none' and f.get('acodec') == 'none':
+                formats.append(f)
+        return formats
+
+    def get_audio_formats(self) -> list[dict]:
+        formats = []
+        for f in self.info.get('formats', []):
+            if f.get('vcodec') == 'none' and f.get('acodec') != 'none':
+                formats.append(f)
+        return formats
+
+    def get_thumbnail(self) -> str:
+        return self.info.get('thumbnail', '')
+
+    def get_video_info(self) -> dict:
+        return {
+            'title': self.info.get('title', 'Unknown Title'),
+            'duration': format_duration(self.info.get('duration', 0)),
+            'thumbnail': self.get_thumbnail(),
+            'formats': self.get_video_formats(),
+            'audio_formats': self.get_audio_formats()
+        }
+
+    def download(self, format: str = 'bestvideo+bestaudio') -> str:
+        # print(self.ytdlp_options['outtmpl'])
         if not os.path.exists(self.ytdlp_options['outtmpl']):
             with yt_dlp.YoutubeDL(self.ytdlp_options) as ydl:
                 ydl.download([self.url])
-        print(f"Download completed for URL: {self.url}")
+        # print(f"Download completed for URL: {self.url}")
         return self.path
 
     @staticmethod
@@ -44,9 +77,9 @@ class Downloader:
             total = d.get('total_bytes', 0)
             downloaded = d['downloaded_bytes']
             percentage = downloaded / total * 100 if total else 0
-            print(f"Downloading: {percentage:.2f}% at {d.get('speed', 'Unknown')} B/s, ETA: {d.get('eta', 'Unknown')}s")
+            return (
+                f"Downloading: {percentage:.2f}% at {d.get('speed', 'Unknown')} B/s, ETA: {d.get('eta', 'Unknown')}s")
         elif d['status'] == 'finished':
-            print(f"Download completed: {d['filename']}")
+            return (f"Download completed: {d['filename']}")
         elif d['status'] == 'error':
-            print("An error occurred during the download.")
-
+            return ("An error occurred during the download.")

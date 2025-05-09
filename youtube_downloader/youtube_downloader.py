@@ -18,16 +18,14 @@ class YoutubeDownloader(Downloader):
     def __init__(self, url: str):
         super().__init__(url=url)
         self.params: dict = {
-            'format': 'best',  # Default to best quality for downloading
             'quiet': True,
             'write_subs': True,
             'outtmpl': '%(title)s.%(ext)s',
             'ffmpeg_location': BIN,
-            'external_downloader': 'ffmpeg',
-            'progress_hooks': [self.progress_hook],
+            # 'external_downloader': 'ffmpeg',
         }
 
-    def download_video(self, url: str = None, resolution: str = 'best', format: str = 'mp4') -> str:
+    def download_video(self, url: str = None, resolution: str = '1080', format: str = 'mp4') -> str:
         ydl_opts = dict(self.params)  # Copy the params to avoid modifying the original params
         ydl_opts.update({
             'paths': {
@@ -36,16 +34,18 @@ class YoutubeDownloader(Downloader):
                 'subtitle': self.paths.get('subtitle'),
                 'thumbnail': self.paths.get('thumbnail'),
             },
-            'format': f'{resolution}/{format}',
+            'format': f'bestvideo[height={resolution}]+bestaudio/best',
+            'postprocessors': [{
+                'key': 'FFmpegVideoConvertor',
+                'preferedformat': format,
+            }],
         })
 
         with YoutubeDL(ydl_opts) as ytd:
             info = ytd.extract_info(url or self.url, download=True)
 
-            requested_downloads = info.get('requested_downloads', None)
-            if requested_downloads:
-                # Return the first requested download filepath. If it doesn't exist, return the default video path.
-                return requested_downloads[0].get('filepath', self.paths.get('video'))
+            video_file = ytd.prepare_filename(info).replace(".webm", f".{format}").replace(".mp4", f".{format}")
+            return os.path.join(self.paths.get('video'), video_file)
 
     def download_audio(self, url: str = None, format: str = 'mp3') -> str:
         ydl_opts = dict(self.params)  # Copy the params to avoid modifying the original params
@@ -124,6 +124,7 @@ class YoutubeDownloader(Downloader):
         # Download the thumbnail image
         thumbnail_data = requests.get(thumbnail_url).content
         thumbnail_path = os.path.join(self.paths.get('thumbnail'), 'thumbnail.jpg')
+        os.makedirs(self.paths.get('thumbnail'), exist_ok=True)
         with open(thumbnail_path, 'wb') as f:
             f.write(thumbnail_data)
 

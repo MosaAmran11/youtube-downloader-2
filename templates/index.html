@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Downloader</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      .container {
+        max-width: 800px;
+        margin-top: 50px;
+      }
+      .video-info {
+        margin-top: 20px;
+      }
+      .download-options {
+        margin-top: 20px;
+      }
+      .progress-container {
+        display: none;
+        margin-top: 20px;
+      }
+      .file-actions {
+        display: none;
+        margin-top: 20px;
+      }
+      .progress {
+        height: 25px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="text-center mb-4">YouTube Downloader</h1>
+
+      <form method="POST" action="/" id="urlForm">
+        <div class="input-group mb-3">
+          <input
+            type="url"
+            class="form-control"
+            name="url"
+            placeholder="Enter YouTube URL"
+            required
+          />
+          <button class="btn btn-primary" type="submit">Get Info</button>
+        </div>
+      </form>
+
+      {% if error %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endif %} {% if video_info %}
+      <div class="video-info">
+        <h3>Video Information</h3>
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{{ video_info.title }}</h5>
+            <p class="card-text">Duration: {{ video_info.duration }}</p>
+          </div>
+        </div>
+
+        <div class="download-options">
+          <h4>Download Options</h4>
+
+          <form method="POST" action="/download" id="downloadForm">
+            <input type="hidden" name="url" value="{{ video_info.url }}" />
+
+            <div class="mb-3">
+              <label class="form-label">Video Formats:</label>
+              <select class="form-select" name="format">
+                {% for format in video_info.formats %}
+                <option value="{{ format.format_id }}">
+                  {{ format.resolution }} - {{ format.ext }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Audio Formats:</label>
+              <select class="form-select" name="audio_format">
+                {% for format in video_info.audio_formats %}
+                <option value="{{ format.format_id }}">
+                  {{ format.abr }}kbps - {{ format.ext }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-success" id="downloadBtn">
+              Download
+            </button>
+          </form>
+        </div>
+
+        <div class="progress-container" id="progressContainer">
+          <h4>Download Progress</h4>
+          <div class="progress mb-2">
+            <div
+              class="progress-bar progress-bar-striped progress-bar-animated"
+              role="progressbar"
+              style="width: 0%"
+              id="progressBar"
+            >
+              0%
+            </div>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span id="downloadSize">0B / 0B</span>
+            <span id="downloadSpeed">0 KB/s</span>
+          </div>
+        </div>
+
+        <div class="file-actions" id="fileActions">
+          <h4>Download Complete!</h4>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary" id="openLocationBtn">
+              Open File Location
+            </button>
+            <button class="btn btn-success" id="openFileBtn">Open File</button>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      let currentFilename = "";
+      let progressInterval = null;
+
+      function formatSize(bytes) {
+        if (bytes === 0) return "0B";
+        const units = ["B", "KB", "MB", "GB"];
+        let size = bytes;
+        let unitIndex = 0;
+
+        while (size >= 1024 && unitIndex < units.length - 1) {
+          size /= 1024;
+          unitIndex++;
+        }
+
+        return `${size.toFixed(1)}${units[unitIndex]}`;
+      }
+
+      function formatSpeed(bytesPerSecond) {
+        return `${formatSize(bytesPerSecond)}/s`;
+      }
+
+      function updateProgress() {
+        fetch("/progress")
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Progress data:", data); // Debug log
+
+            if (data.status === "downloading") {
+              const progressBar = document.getElementById("progressBar");
+              const downloadSize = document.getElementById("downloadSize");
+              const downloadSpeed = document.getElementById("downloadSpeed");
+
+              // Remove % symbol and convert to number
+              const percentage = parseFloat(data.percentage.replace("%", ""));
+              progressBar.style.width = `${percentage}%`;
+              progressBar.textContent = data.percentage;
+
+              downloadSize.textContent = `${formatSize(
+                data.downloaded_bytes
+              )} / ${formatSize(data.total_bytes)}`;
+              downloadSpeed.textContent = formatSpeed(data.speed);
+            } else if (data.status === "finished") {
+              clearInterval(progressInterval);
+              currentFilename = data.filename;
+              document.getElementById("progressContainer").style.display =
+                "none";
+              document.getElementById("fileActions").style.display = "block";
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching progress:", error);
+          });
+      }
+
+      document
+        .getElementById("downloadForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const formData = new FormData(this);
+          document.getElementById("progressContainer").style.display = "block";
+          document.getElementById("fileActions").style.display = "none";
+
+          // Clear any existing interval
+          if (progressInterval) {
+            clearInterval(progressInterval);
+          }
+
+          fetch("/download", {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.status === "success") {
+                currentFilename = data.filename;
+                // Start progress updates
+                progressInterval = setInterval(updateProgress, 1000);
+              } else {
+                alert("Error: " + data.error);
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              alert("An error occurred during download");
+            });
+        });
+
+      document
+        .getElementById("openLocationBtn")
+        .addEventListener("click", function () {
+          fetch(`/open_location/${encodeURIComponent(currentFilename)}`)
+            .then((response) => response.json())
+            .catch((error) => console.error("Error:", error));
+        });
+
+      document
+        .getElementById("openFileBtn")
+        .addEventListener("click", function () {
+          fetch(`/open_file/${encodeURIComponent(currentFilename)}`)
+            .then((response) => response.json())
+            .catch((error) => console.error("Error:", error));
+        });
+    </script>
+  </body>
+</html>
