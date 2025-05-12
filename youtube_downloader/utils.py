@@ -118,7 +118,6 @@ def get_ffmpeg_path():
         for i in os.listdir(os.path.join(base_path, ffmpeg_dir, 'bin')):
             if i.startswith('ffmpeg'):
                 pth = os.path.normpath(os.path.join(base_path, ffmpeg_dir, 'bin', i))
-                print(pth)
                 return pth
     return None
 

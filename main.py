@@ -94,17 +94,13 @@ def download():
         return jsonify({'error': 'No video selected'}), 400
 
     format_id = request.form.get('format')
-    audio_format_id = request.form.get('audio_format')
+    format_obj = None
 
     try:
         # Get the format object from the available formats
         if format_id:
-            format_obj = next((f for f in current_downloader.get_video_formats()
+            format_obj = next((f for f in current_downloader.info.get('formats', [])
                                if f['format_id'] == format_id), None)
-        else:
-            format_obj = next((f for f in current_downloader.get_audio_formats()
-                               if f['format_id'] == audio_format_id), None)
-
         if not format_obj:
             return jsonify({'error': 'Selected format not found'}), 400
 

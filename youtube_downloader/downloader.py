@@ -167,9 +167,9 @@ class Downloader:
 
             # Get metadata from the video info
             metadata = {
-                'title': self.info.get('title', ''),
-                'artist': self.info.get('uploader', ''),
-                'album': self.info.get('album', ''),
+                'title': self.info.get('title', 'Unknown Title'),
+                'artist': self.info.get('uploader', 'Unknown Artist'),
+                'album': self.info.get('album', 'Unknown Album'),
                 'track': self.info.get('track', ''),
                 'date': self.info.get('upload_date', ''),
                 'description': self.info.get('description', ''),
