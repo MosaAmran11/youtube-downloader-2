@@ -1,5 +1,5 @@
 /youtube_downloader/config.py
-/youtube_downloader/ddownloader.py
-/youtube_downloader/itags.py
 /youtube_downloader/modules.py
 /youtube_downloader/playlist.py
+/youtube_downloader/test.py
+/tests/info.json

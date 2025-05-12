@@ -69,9 +69,9 @@ def download_latest_ffmpeg(base_path: str):
         version = None
         ffmpeg_bin_path = None
         for item in contents:
-            if re.search(r'ffmpeg-(\d+\.\d+(?:\.\d+)?)', item):
+            if re.search(r'ffmpeg-(\d+\.\d+(?:\.\d+)?|latest)(?:-|$)', item):
                 version = re.search(
-                    r'ffmpeg-(\d+\.\d+(?:\.\d+)?)', item).group(1)
+                    r'ffmpeg-(\d+\.\d+(?:\.\d+)?|latest)(?:-|$)', item).group(1)
                 ffmpeg_bin_path = os.path.join(extracted_dir, item)
                 break
             if item == "ffmpeg" or item == "ffmpeg.exe":
@@ -92,6 +92,7 @@ def download_latest_ffmpeg(base_path: str):
         else:
             shutil.move(ffmpeg_bin_path, target_dir)
             print(f"FFmpeg {version} installed at {target_dir}")
+        return target_dir
 
     finally:
         os.remove(archive_path)
@@ -112,8 +113,9 @@ def get_ffmpeg_path():
         match = re.search(
             r'ffmpeg-(\d+\.\d+(?:\.\d+)?|latest)(?:-|$)', ffmpeg_dir)
         if not match:
-            download_latest_ffmpeg(base_path)
-        return os.path.join(base_path, ffmpeg_dir, 'bin')
+            ffmpeg_dir = download_latest_ffmpeg(base_path)
+
+        return os.path.join(ffmpeg_dir, 'bin')
 
 
 def get_referenced_folder(folder_name: str):

@@ -15,16 +15,16 @@
 #     download(url, ydl_opt)
 
 from flask import Flask, render_template, request, send_file, jsonify
-import yt_dlp
 import os
 from datetime import timedelta
 import subprocess
 import platform
+from youtube_downloader.downloader import Downloader
 
 app = Flask(__name__)
 
-# Global variable to store progress
-progress_hook = None
+# Global variable to store downloader instance
+current_downloader = None
 
 
 def format_duration(seconds):
@@ -84,60 +84,19 @@ class ProgressHook:
             self.progress['filename'] = d.get('filename', '')
 
 
-def get_video_info(url):
-    ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-        'extract_flat': True,
-    }
-
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-
-            # Get video formats
-            formats = []
-            for f in info.get('formats', []):
-                if f.get('vcodec') != 'none' and f.get('acodec') != 'none':
-                    formats.append({
-                        'format_id': f['format_id'],
-                        'resolution': f.get('resolution', 'N/A'),
-                        'ext': f.get('ext', 'N/A'),
-                        'filesize': f.get('filesize', 0)
-                    })
-
-            # Get audio formats
-            audio_formats = []
-            for f in info.get('formats', []):
-                if f.get('vcodec') == 'none' and f.get('acodec') != 'none':
-                    audio_formats.append({
-                        'format_id': f['format_id'],
-                        'abr': f.get('abr', 0),
-                        'ext': f.get('ext', 'N/A'),
-                        'filesize': f.get('filesize', 0)
-                    })
-
-            return {
-                'title': info.get('title', 'Unknown Title'),
-                'duration': format_duration(info.get('duration', 0)),
-                'url': url,
-                'formats': formats,
-                'audio_formats': audio_formats
-            }
-    except Exception as e:
-        return None
-
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    global current_downloader
     video_info = None
     error = None
 
     if request.method == 'POST':
         url = request.form.get('url')
         if url:
-            video_info = get_video_info(url)
-            if not video_info:
+            try:
+                current_downloader = Downloader(url)
+                video_info = current_downloader.get_video_info()
+            except Exception as e:
                 error = "Could not fetch video information. Please check the URL and try again."
 
     return render_template('index.html', video_info=video_info, error=error)
@@ -145,48 +104,45 @@ def index():
 
 @app.route('/download', methods=['POST'])
 def download():
-    global progress_hook
-    url = request.form.get('url')
+    global current_downloader
+    if not current_downloader:
+        return jsonify({'error': 'No video selected'}), 400
+
     format_id = request.form.get('format')
     audio_format_id = request.form.get('audio_format')
 
-    if not url:
-        return jsonify({'error': 'No URL provided'}), 400
-
-    progress_hook = ProgressHook()
-    ydl_opts = {
-        'format': format_id if format_id else audio_format_id,
-        'outtmpl': '%(title)s.%(ext)s',
-        'progress_hooks': [progress_hook],
-        'merge_output_format': 'mp4' if format_id else 'mp3',
-    }
-
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info)
+        # Get the format object from the available formats
+        if format_id:
+            format_obj = next((f for f in current_downloader.get_video_formats()
+                               if f['format_id'] == format_id), None)
+        else:
+            format_obj = next((f for f in current_downloader.get_audio_formats()
+                               if f['format_id'] == audio_format_id), None)
 
-            # Remove the temporary file if it exists
-            if os.path.exists(filename + '.part'):
-                os.remove(filename + '.part')
+        if not format_obj:
+            return jsonify({'error': 'Selected format not found'}), 400
 
-            if os.path.exists(filename):
-                return jsonify({
-                    'status': 'success',
-                    'filename': filename,
-                    'filesize': os.path.getsize(filename)
-                })
-            else:
-                return jsonify({'error': 'File not found'}), 404
+        # Download the file
+        file_path = current_downloader.download(format_obj)
+
+        if os.path.exists(file_path):
+            return jsonify({
+                'status': 'success',
+                'filename': file_path,
+                'filesize': os.path.getsize(file_path),
+                'type': 'video' if format_id else 'audio'
+            })
+        else:
+            return jsonify({'error': 'File not found'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
 @app.route('/progress')
 def get_progress():
-    global progress_hook
-    if progress_hook:
-        return jsonify(progress_hook.progress)
+    if current_downloader and hasattr(current_downloader, 'progress_hook'):
+        return jsonify(current_downloader.progress_hook.progress)
     return jsonify({'status': 'not_started'})
 
 
