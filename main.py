@@ -93,11 +93,11 @@ def download():
     if not current_downloader.url:
         return jsonify({'error': 'No video selected'}), 400
 
-    format_id = request.form.get('fmt')
+    format_id = request.form.get('format')
     audio_format_id = request.form.get('audio_format')
 
     try:
-        # Get the fmt object from the available formats
+        # Get the format object from the available formats
         if format_id:
             format_obj = next((f for f in current_downloader.get_video_formats()
                                if f['format_id'] == format_id), None)
@@ -106,7 +106,7 @@ def download():
                                if f['format_id'] == audio_format_id), None)
 
         if not format_obj:
-            return jsonify({'error': 'Selected fmt not found'}), 400
+            return jsonify({'error': 'Selected format not found'}), 400
 
         # Download the file
         file_path = current_downloader.download(format_obj)

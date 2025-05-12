@@ -50,7 +50,6 @@ class Downloader:
         self.url: str = url
         self.progress_hook = ProgressHook()
         self.ytdlp_options: dict = {
-            # 'format': 'bestvideo[all]+bestaudio[all]/best',  # Default to best quality
             'quiet': True,
             'outtmpl': self.path,
             'ffmpeg_location': get_ffmpeg_path(),
@@ -122,6 +121,7 @@ class Downloader:
                         # 'vcodec': f.get('vcodec', 'none'),
                         'acodec': f.get('acodec', 'none'),
                     })
+                    break
         return formats
 
     def get_thumbnail(self) -> str:
@@ -141,20 +141,19 @@ class Downloader:
         """Download the video or audio based on the selected format.
         :param fmt: The format dictionary containing format details.
         :return: The downloaded file path."""
-        # Determine if this is a video or audio fmt
+        # Determine if this is a video or audio format
         is_video = fmt.get('vcodec') != 'none'
 
         path = os.path.join(
             self.ytdlp_options['outtmpl'], 'Video' if is_video else 'Audio')
 
-        # Update options based on fmt type
+        # Update options based on format type
         if is_video:
-            # For video downloads, combine best video with best audio
             video_format = fmt.get('format_id', 'bestvideo')
             self.ytdlp_options.update({
                 'outtmpl': path,
                 # Combine selected video with best audio
-                'fmt': f'{video_format}+bestaudio',
+                'format': f'{video_format}+bestaudio',
                 'postprocessors': [{
                     'key': 'FFmpegVideoConvertor',
                     'preferedformat': 'mp4',
@@ -162,7 +161,7 @@ class Downloader:
                 'merge_output_format': 'mp4',
             })
         else:
-            # Get the audio quality from the selected fmt
+            # Get the audio quality from the selected format
             # Default to 192kbps if not specified
             audio_quality = fmt.get('abr', 192)
 
@@ -178,7 +177,7 @@ class Downloader:
 
             self.ytdlp_options.update({
                 'outtmpl': path,
-                'fmt': fmt.get('format_id', 'bestaudio'),
+                'format': fmt.get('format_id', 'bestaudio'),
                 'writethumbnail': True,  # Download thumbnail
                 'postprocessors': [
                     {
