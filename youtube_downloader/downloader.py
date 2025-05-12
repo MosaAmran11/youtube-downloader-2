@@ -39,7 +39,7 @@ class Downloader:
         self.url: str = url
         self.progress_hook = ProgressHook()
         self.ytdlp_options: dict = {
-            # 'fmt': 'best',  # Default to best quality
+            # 'format': 'best',  # Default to best quality
             'quiet': True,
             'outtmpl': self.path,
             'ffmpeg_location': get_ffmpeg_path(),
@@ -71,30 +71,33 @@ class Downloader:
     def get_video_formats(self) -> list[dict]:
         formats = []
         for f in self.info.get('formats', []):
-            if f.get('vcodec') != 'none':
+            if f.get('vcodec', 'none').startswith('avc'):
                 formats.append({
                     'format_id': f['format_id'],
-                    'resolution': f.get('resolution', 'N/A'),
+                    'resolution': f.get('height', 'N/A'),
+                    'quality': ('High Quality' if f.get('height', 0) >= 720
+                                else 'Medium Quality' if f.get('height', 0) >= 480
+                    else 'Low Quality'),
                     'ext': f.get('ext', 'N/A'),
                     'filesize': f.get('filesize', 0),
                     'vcodec': f.get('vcodec', 'none'),
-                    'acodec': f.get('acodec', 'none'),
+                    # 'acodec': f.get('acodec', 'none'),
                 })
         return formats
 
-    def get_audio_formats(self) -> list[dict]:
-        formats = []
+    def get_audio_formats(self) -> dict[str, str | int] | None:
         for f in self.info.get('formats', []):
             if f.get('vcodec') == 'none' and f.get('acodec') != 'none':
-                formats.append({
+                return {
                     'format_id': f['format_id'],
                     'abr': f.get('abr', 0),
+                    'quality': 'High Quality',
                     'ext': f.get('ext', 'N/A'),
                     'filesize': f.get('filesize', 0),
-                    'vcodec': f.get('vcodec', 'none'),
+                    # 'vcodec': f.get('vcodec', 'none'),
                     'acodec': f.get('acodec', 'none'),
-                })
-        return formats
+                }
+        return None
 
     def get_thumbnail(self) -> str:
         """Get thumbnail URL"""
