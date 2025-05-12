@@ -34,7 +34,7 @@ class YoutubeDownloader(Downloader):
                 'subtitle': self.paths.get('subtitle'),
                 'thumbnail': self.paths.get('thumbnail'),
             },
-            'format': f'bestvideo[height={resolution}]+bestaudio/best',
+            'fmt': f'bestvideo[height={resolution}]+bestaudio/best',
             'postprocessors': [{
                 'key': 'FFmpegVideoConvertor',
                 'preferedformat': format,
@@ -56,7 +56,7 @@ class YoutubeDownloader(Downloader):
                 'subtitle': self.paths.get('subtitle'),
                 'thumbnail': self.paths.get('thumbnail'),
             },
-            'format': f'[abr>130]/bestaudio',
+            'fmt': f'[abr>130]/bestaudio',
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': format,
@@ -118,7 +118,7 @@ class YoutubeDownloader(Downloader):
         with YoutubeDL({}) as ydl:
             info = ydl.extract_info(url, download=False)
             return info.get('formats', [])
-            # return [f"{f['format']} ({f['ext']})" for f in formats]
+            # return [f"{f['fmt']} ({f['ext']})" for f in formats]
 
     def _embed_thumbnail(self, audio_filename: str, thumbnail_url: str):
         # Download the thumbnail image

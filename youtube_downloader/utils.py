@@ -115,7 +115,12 @@ def get_ffmpeg_path():
         if not match:
             ffmpeg_dir = download_latest_ffmpeg(base_path)
 
-        return os.path.join(ffmpeg_dir, 'bin')
+        for i in os.listdir(os.path.join(base_path, ffmpeg_dir, 'bin')):
+            if i.startswith('ffmpeg'):
+                pth = os.path.normpath(os.path.join(base_path, ffmpeg_dir, 'bin', i))
+                print(pth)
+                return pth
+    return None
 
 
 def get_referenced_folder(folder_name: str):

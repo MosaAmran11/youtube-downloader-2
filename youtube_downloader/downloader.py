@@ -39,21 +39,20 @@ class Downloader:
         self.url: str = url
         self.progress_hook = ProgressHook()
         self.ytdlp_options: dict = {
-            # 'format': 'best',  # Default to best quality
+            # 'fmt': 'best',  # Default to best quality
             'quiet': True,
             'outtmpl': self.path,
             'ffmpeg_location': get_ffmpeg_path(),
             'progress_hooks': [self.progress_hook],
         }
-        self._info: dict = None
+        self._info: dict = {}
 
     @property
     def info(self):
         if not self._info:
             self._info = yt_dlp.YoutubeDL(
                 self.ytdlp_options).extract_info(self.url, download=False)
-        else:
-            return self._info
+        return self._info
 
     @property
     def path(self):
@@ -98,7 +97,7 @@ class Downloader:
         return formats
 
     def get_thumbnail(self) -> str:
-        '''Get thumbnail URL'''
+        """Get thumbnail URL"""
         return self.info.get('thumbnail', '')
 
     def get_video_info(self) -> dict:
@@ -110,21 +109,24 @@ class Downloader:
             'audio_formats': self.get_audio_formats()
         }
 
-    def download(self, format: dict) -> str:
-        # Determine if this is a video or audio format
-        is_video = format.get('vcodec') != 'none'
+    def download(self, fmt: dict) -> str:
+        """Download the video or audio based on the selected format.
+        :param fmt: The format dictionary containing format details.
+        :return: The downloaded file path."""
+        # Determine if this is a video or audio fmt
+        is_video = fmt.get('vcodec') != 'none'
 
         path = os.path.join(
             self.ytdlp_options['outtmpl'], 'Video' if is_video else 'Audio')
 
-        # Update options based on format type
+        # Update options based on fmt type
         if is_video:
             # For video downloads, combine best video with best audio
-            video_format = format.get('format_id', 'bestvideo')
+            video_format = fmt.get('format_id', 'bestvideo')
             self.ytdlp_options.update({
                 'outtmpl': path,
                 # Combine selected video with best audio
-                'format': f'{video_format}+bestaudio',
+                'fmt': f'{video_format}+bestaudio',
                 'postprocessors': [{
                     'key': 'FFmpegVideoConvertor',
                     'preferedformat': 'mp4',
@@ -132,9 +134,9 @@ class Downloader:
                 'merge_output_format': 'mp4',
             })
         else:
-            # Get the audio quality from the selected format
+            # Get the audio quality from the selected fmt
             # Default to 192kbps if not specified
-            audio_quality = format.get('abr', 192)
+            audio_quality = fmt.get('abr', 192)
 
             # Get metadata from the video info
             metadata = {
@@ -148,7 +150,7 @@ class Downloader:
 
             self.ytdlp_options.update({
                 'outtmpl': path,
-                'format': format.get('format_id', 'bestaudio'),
+                'fmt': fmt.get('format_id', 'bestaudio'),
                 'writethumbnail': True,  # Download thumbnail
                 'postprocessors': [
                     {

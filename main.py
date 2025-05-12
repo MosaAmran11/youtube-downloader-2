@@ -1,19 +1,3 @@
-# from yt_dlp import YoutubeDL
-#
-#
-# def download(url: str, opt: dict[str, str]):
-#     with YoutubeDL(opt) as ydl:
-#         ydl.download([url])
-#
-#
-# if __name__ == '__main__':
-#     url = 'https://music.youtube.com/watch?v=8VLXHyHRXjc&si=1iUnT8lUPj17E80e'
-#     ydl_opt = {
-#         'format': 'bestvideo+bestaudio',
-#         'outtmpl': '%(title)s.%(ext)s'
-#     }
-#     download(url, ydl_opt)
-
 from flask import Flask, render_template, request, send_file, jsonify
 import os
 from datetime import timedelta
@@ -32,7 +16,7 @@ def format_duration(seconds):
 
 
 def format_size(size_bytes):
-    """Convert size in bytes to human readable format"""
+    """Convert size in bytes to human-readable fmt"""
     for unit in ['B', 'KB', 'MB', 'GB']:
         if size_bytes < 1024.0:
             return f"{size_bytes:.1f}{unit}"
@@ -60,28 +44,28 @@ def open_file(filepath):
         subprocess.run(["xdg-open", filepath])
 
 
-class ProgressHook:
-    def __init__(self):
-        self.progress = {
-            'status': 'downloading',
-            'percentage': '0%',
-            'downloaded_bytes': 0,
-            'total_bytes': 0,
-            'speed': 0,
-            'filename': ''
-        }
-
-    def __call__(self, d):
-        if d['status'] == 'downloading':
-            self.progress['status'] = 'downloading'
-            self.progress['percentage'] = d.get('_percent_str', '0%').strip()
-            self.progress['downloaded_bytes'] = d.get('downloaded_bytes', 0)
-            self.progress['total_bytes'] = d.get('total_bytes', 0)
-            self.progress['speed'] = d.get('speed', 0)
-            self.progress['filename'] = d.get('filename', '')
-        elif d['status'] == 'finished':
-            self.progress['status'] = 'finished'
-            self.progress['filename'] = d.get('filename', '')
+# class ProgressHook:
+#     def __init__(self):
+#         self.progress = {
+#             'status': 'downloading',
+#             'percentage': '0%',
+#             'downloaded_bytes': 0,
+#             'total_bytes': 0,
+#             'speed': 0,
+#             'filename': ''
+#         }
+#
+#     def __call__(self, d):
+#         if d['status'] == 'downloading':
+#             self.progress['status'] = 'downloading'
+#             self.progress['percentage'] = d.get('_percent_str', '0%').strip()
+#             self.progress['downloaded_bytes'] = d.get('downloaded_bytes', 0)
+#             self.progress['total_bytes'] = d.get('total_bytes', 0)
+#             self.progress['speed'] = d.get('speed', 0)
+#             self.progress['filename'] = d.get('filename', '')
+#         elif d['status'] == 'finished':
+#             self.progress['status'] = 'finished'
+#             self.progress['filename'] = d.get('filename', '')
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -97,7 +81,7 @@ def index():
                 current_downloader = Downloader(url)
                 video_info = current_downloader.get_video_info()
             except Exception as e:
-                error = "Could not fetch video information. Please check the URL and try again."
+                error = f"Could not fetch video information. Please check the URL and try again. {e}"
 
     return render_template('index.html', video_info=video_info, error=error)
 
@@ -108,11 +92,11 @@ def download():
     if not current_downloader:
         return jsonify({'error': 'No video selected'}), 400
 
-    format_id = request.form.get('format')
+    format_id = request.form.get('fmt')
     audio_format_id = request.form.get('audio_format')
 
     try:
-        # Get the format object from the available formats
+        # Get the fmt object from the available formats
         if format_id:
             format_obj = next((f for f in current_downloader.get_video_formats()
                                if f['format_id'] == format_id), None)
@@ -121,7 +105,7 @@ def download():
                                if f['format_id'] == audio_format_id), None)
 
         if not format_obj:
-            return jsonify({'error': 'Selected format not found'}), 400
+            return jsonify({'error': 'Selected fmt not found'}), 400
 
         # Download the file
         file_path = current_downloader.download(format_obj)
