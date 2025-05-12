@@ -8,7 +8,7 @@ from youtube_downloader.downloader import Downloader
 app = Flask(__name__)
 
 # Global variable to store downloader instance
-current_downloader = None
+current_downloader = Downloader('')  # Downloader instance with empty URL. (Instead of `None` to avoid NoneType errors)
 
 
 def format_duration(seconds):
@@ -16,7 +16,7 @@ def format_duration(seconds):
 
 
 def format_size(size_bytes):
-    """Convert size in bytes to human-readable fmt"""
+    """Convert size in bytes to human-readable format"""
     for unit in ['B', 'KB', 'MB', 'GB']:
         if size_bytes < 1024.0:
             return f"{size_bytes:.1f}{unit}"
@@ -90,7 +90,7 @@ def index():
 @app.route('/download', methods=['POST'])
 def download():
     global current_downloader
-    if not current_downloader:
+    if not current_downloader.url:
         return jsonify({'error': 'No video selected'}), 400
 
     format_id = request.form.get('fmt')

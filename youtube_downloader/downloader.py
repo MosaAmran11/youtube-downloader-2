@@ -88,7 +88,7 @@ class Downloader:
     def get_audio_formats(self) -> list[dict] | None:
         formats = []
         for f in self.info.get('formats', []):
-            if f.get('vcodec') == 'none' and f.get('acodec') != 'none' and f.get('abr', 0) > 0:
+            if f.get('vcodec') == 'none' and f.get('acodec') != 'none' and f.get('abr', 0):
                 formats.append({
                     'format_id': f['format_id'],
                     'abr': f.get('abr', 0),
@@ -105,7 +105,7 @@ class Downloader:
                     formats.append({
                         'format_id': f['format_id'],
                         'abr': f.get('abr', 0),
-                        'quality': 'Low Quality' if f.get('abr', 0) < 128 else 'High Quality',
+                        'quality': 'High Quality',
                         'ext': f.get('ext', 'N/A'),
                         'filesize': f.get('filesize', 0),
                         # 'vcodec': f.get('vcodec', 'none'),
