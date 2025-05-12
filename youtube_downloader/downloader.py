@@ -6,8 +6,17 @@ import yt_dlp
 from youtube_downloader.utils import get_referenced_folder, get_ffmpeg_path, download_latest_ffmpeg
 
 
-def format_duration(seconds):
+def format_duration(seconds: float) -> str:
     return str(timedelta(seconds=seconds))
+
+
+def format_size(size_bytes: float) -> str:
+    """Convert size in bytes to human-readable format"""
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if size_bytes < 1024.0:
+            return f"{size_bytes:.1f}{unit}"
+        size_bytes /= 1024.0
+    return f"{size_bytes:.1f}GB"
 
 
 class ProgressHook:
@@ -39,7 +48,7 @@ class Downloader:
         self.url: str = url
         self.progress_hook = ProgressHook()
         self.ytdlp_options: dict = {
-            'format': 'bestvideo+bestaudio/best',  # Default to best quality
+            # 'format': 'bestvideo[all]+bestaudio[all]/best',  # Default to best quality
             'quiet': True,
             'outtmpl': self.path,
             'ffmpeg_location': get_ffmpeg_path(),
@@ -79,7 +88,7 @@ class Downloader:
                                 else 'Medium Quality' if f.get('height', 0) >= 480
                     else 'Low Quality'),
                     'ext': f.get('ext', 'N/A'),
-                    'filesize': f.get('filesize', 0),
+                    'filesize': format_size(f.get('filesize', 0)),
                     'vcodec': f.get('vcodec', 'none'),
                     # 'acodec': f.get('acodec', 'none'),
                 })
@@ -94,7 +103,7 @@ class Downloader:
                     'abr': f.get('abr', 0),
                     'quality': 'Low Quality' if f.get('abr', 0) < 128 else 'High Quality',
                     'ext': f.get('ext', 'N/A'),
-                    'filesize': f.get('filesize', 0),
+                    'filesize': format_size(f.get('filesize', 0)),
                     # 'vcodec': f.get('vcodec', 'none'),
                     'acodec': f.get('acodec', 'none'),
                 })
@@ -107,7 +116,7 @@ class Downloader:
                         'abr': f.get('abr', 0),
                         'quality': 'High Quality',
                         'ext': f.get('ext', 'N/A'),
-                        'filesize': f.get('filesize', 0),
+                        'filesize': format_size(f.get('filesize', 0)),
                         # 'vcodec': f.get('vcodec', 'none'),
                         'acodec': f.get('acodec', 'none'),
                     })
