@@ -80,6 +80,7 @@ def index():
             try:
                 current_downloader = Downloader(url)
                 video_info = current_downloader.get_video_info()
+                print(video_info)
             except Exception as e:
                 error = f"Could not fetch video information. Please check the URL and try again. {e}"
 
