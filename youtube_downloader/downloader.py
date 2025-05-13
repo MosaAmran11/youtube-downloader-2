@@ -1,3 +1,4 @@
+import time
 from datetime import timedelta
 import os.path
 import platform
@@ -50,8 +51,7 @@ class Downloader:
         self.url: str = url
         self.progress_hook = ProgressHook()
         self.ytdlp_options: dict = {
-            'quiet': True,
-            'outtmpl': self.path,
+            # 'quiet': True,
             'ffmpeg_location': get_ffmpeg_path(),
             'progress_hooks': [self.progress_hook],
         }
@@ -76,7 +76,7 @@ class Downloader:
                 os.getenv("HOME"),
                 'Downloads',
                 app_name)
-        return os.path.normpath(base_path)
+        return base_path
 
     def get_video_formats(self) -> list[dict]:
         formats = []
@@ -144,8 +144,7 @@ class Downloader:
         # Determine if this is a video or audio format
         is_video = fmt.get('vcodec') != 'none'
 
-        path = os.path.join(
-            self.ytdlp_options['outtmpl'], 'Video' if is_video else 'Audio')
+        path = os.path.join(self.path, 'Video' if is_video else 'Audio', '%(title)s.%(ext)s')
 
         # Update options based on format type
         if is_video:
@@ -168,11 +167,12 @@ class Downloader:
             # Get metadata from the video info
             metadata = {
                 'title': self.info.get('title', 'Unknown Title'),
-                'artist': self.info.get('uploader', 'Unknown Artist'),
-                'album': self.info.get('album', 'Unknown Album'),
-                'track': self.info.get('track', ''),
-                'date': self.info.get('upload_date', ''),
+                'artist': self.info.get('artists', [self.info.get('uploader', 'Unknown Artist')])[0],
+                'album': self.info.get('album', self.info.get('title', 'Unknown Album')),
+                # 'track': self.info.get('track', ''),
+                'date': str(self.info.get('release_year', self.info.get('upload_date', '')[:4])),
                 'description': self.info.get('description', ''),
+                'comment': '',
             }
 
             self.ytdlp_options.update({
@@ -197,19 +197,26 @@ class Downloader:
                     '-metadata', f'title={metadata["title"]}',
                     '-metadata', f'artist={metadata["artist"]}',
                     '-metadata', f'album={metadata["album"]}',
-                    '-metadata', f'track={metadata["track"]}',
+                    # '-metadata', f'track={metadata["track"]}',
                     '-metadata', f'date={metadata["date"]}',
                     '-metadata', f'description={metadata["description"]}',
+                    '-metadata', f'comment={metadata["comment"]}',
                 ],
             })
 
         with yt_dlp.YoutubeDL(self.ytdlp_options) as ydl:
             ydl.download([self.url])
+            path = ydl.prepare_filename(self.info)
 
         # For audio downloads, update the filename to .mp3
         if not is_video:
             base_path = os.path.splitext(path)[0]
             path = f"{base_path}.mp3"
+
+        current_time = time.time()
+
+        # Update the file's modification time
+        os.utime(path, (current_time, current_time))
 
         return path
 

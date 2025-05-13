@@ -80,9 +80,8 @@ def index():
             try:
                 current_downloader = Downloader(url)
                 video_info = current_downloader.get_video_info()
-                print(video_info)
             except Exception as e:
-                error = f"Could not fetch video information. Please check the URL and try again. {e}"
+                error = "Could not fetch video information. Please check the URL and try again."
 
     return render_template('index.html', video_info=video_info, error=error)
 
@@ -112,7 +111,8 @@ def download():
                 'status': 'success',
                 'filename': file_path,
                 'filesize': os.path.getsize(file_path),
-                'type': 'video' if format_id else 'audio'
+                'type': 'audio' if next((f for f in current_downloader.get_audio_formats()
+                                         if f['format_id'] == format_id), None) else 'video'
             })
         else:
             return jsonify({'error': 'File not found'}), 404
