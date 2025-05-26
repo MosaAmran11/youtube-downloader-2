@@ -13,7 +13,7 @@ def format_duration(seconds: float) -> str:
 
 def format_size(size_bytes: float) -> str:
     """Convert size in bytes to human-readable format"""
-    if size_bytes == 0:
+    if not size_bytes:  # Handle zero or None size
         return ''
     for unit in ['B', 'KB', 'MB', 'GB']:
         if size_bytes < 1024.0:
@@ -35,7 +35,7 @@ class ProgressHook:
 
     def __call__(self, d):
         if d['status'] == 'downloading':
-            self.progress['status'] = 'downloading'
+            # self.progress['status'] = 'downloading'
             self.progress['percentage'] = d.get('_percent_str', '0%').strip()
             self.progress['downloaded_bytes'] = d.get('downloaded_bytes', 0)
             self.progress['total_bytes'] = d.get('total_bytes', 0)
@@ -82,47 +82,56 @@ class Downloader:
         formats = []
         for f in self.info.get('formats', []):
             if f.get('vcodec', 'none').startswith('avc'):
-                formats.append({
-                    'format_id': f['format_id'],
-                    'resolution': f.get('height', 'N/A'),
-                    'quality': ('High Quality' if f.get('height', 0) >= 720
-                                else 'Medium Quality' if f.get('height', 0) >= 480
-                    else 'Low Quality'),
-                    'ext': f.get('ext', 'N/A'),
-                    'filesize': format_size(f.get('filesize', 0)),
-                    'vcodec': f.get('vcodec', 'none'),
-                    # 'acodec': f.get('acodec', 'none'),
-                })
+                if f.get('filesize', None):
+                    formats.append({
+                        'format_id': f['format_id'],
+                        'resolution': f.get('height', 'N/A'),
+                        'quality': ('High Quality' if f.get('height', 0) >= 720
+                                    else 'Medium Quality' if f.get('height', 0) >= 480
+                        else 'Low Quality'),
+                        'ext': f.get('ext', 'N/A'),
+                        'filesize': format_size(f.get('filesize', 0)),
+                        'vcodec': f.get('vcodec', 'none'),
+                    })
+        if not formats:
+            for f in self.info.get('formats', []):
+                if f.get('vcodec', 'none').startswith('avc'):
+                    formats.append({
+                        'format_id': f['format_id'],
+                        'resolution': f.get('height', 'N/A'),
+                        'quality': ('High Quality' if f.get('height', 0) >= 720
+                                    else 'Medium Quality' if f.get('height', 0) >= 480
+                        else 'Low Quality'),
+                        'ext': f.get('ext', 'N/A'),
+                        'filesize': 0,
+                        'vcodec': f.get('vcodec', 'none'),
+                    })
+
         return formats
 
     def get_audio_formats(self) -> list[dict] | None:
-        formats = []
+        best_format = None
         for f in self.info.get('formats', []):
             if f.get('vcodec') == 'none' and f.get('acodec') != 'none' and f.get('abr', 0):
-                formats.append({
-                    'format_id': f['format_id'],
-                    'abr': f.get('abr', 0),
-                    'quality': 'Low Quality' if f.get('abr', 0) < 128 else 'High Quality',
-                    'ext': f.get('ext', 'N/A'),
-                    'filesize': format_size(f.get('filesize', 0)),
-                    # 'vcodec': f.get('vcodec', 'none'),
-                    'acodec': f.get('acodec', 'none'),
-                })
-        if not formats:
+                if best_format is None:
+                    best_format = f
+                else:
+                    best_format = max(best_format, f, key=lambda x: x.get('abr', 0))
+        if not best_format:
             # If no audio formats found, return the first available format
             for f in self.info.get('formats', []):
                 if f.get('vcodec') == 'none' and f.get('acodec') != 'none':
-                    formats.append({
-                        'format_id': f['format_id'],
-                        'abr': f.get('abr', 0),
-                        'quality': 'High Quality',
-                        'ext': f.get('ext', 'N/A'),
-                        'filesize': format_size(f.get('filesize', 0)),
-                        # 'vcodec': f.get('vcodec', 'none'),
-                        'acodec': f.get('acodec', 'none'),
-                    })
+                    best_format = f
                     break
-        return formats
+
+        return [{
+            'format_id': best_format['format_id'],
+            'abr': best_format.get('abr', 0),
+            'quality': 'Low Quality' if best_format.get('abr', 0) < 128 else 'High Quality',
+            'ext': best_format.get('ext', 'N/A'),
+            'filesize': format_size(best_format.get('filesize', 0)),
+            'acodec': best_format.get('acodec', 'none'),
+        }]
 
     def get_thumbnail(self) -> str:
         """Get thumbnail URL"""
