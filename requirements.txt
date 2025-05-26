@@ -1,2 +1,8 @@
-flask
-yt-dlp
+pip~=25.0.1
+yt-dlp~=2025.5.22
+requests~=2.32.3
+urllib3~=2.4.0
+certifi~=2025.4.26
+mutagen~=1.47.0
+idna~=3.10
+charset-normalizer~=3.4.2
