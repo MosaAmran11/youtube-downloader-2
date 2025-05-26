@@ -7,3 +7,4 @@
 /tests/
 /.idea/
 /youtube_downloader/bin/
+/youtube_downloader/__pycache__/
