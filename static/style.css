@@ -1,0 +1,36 @@
+.container {
+  max-width: 800px;
+  margin-top: 50px;
+}
+.video-info {
+  margin-top: 20px;
+}
+.download-options {
+  margin-top: 20px;
+}
+.progress-container {
+  display: none;
+  margin-top: 20px;
+}
+.file-actions {
+  display: none;
+  margin-top: 20px;
+}
+.progress {
+  height: 25px;
+}
+.video-thumbnail {
+  width: 320px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.video-details {
+  flex: 1;
+  padding-left: 20px;
+}
+.video-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
