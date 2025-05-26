@@ -71,6 +71,7 @@ def open_file(filepath):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     global current_downloader
+    url = ''
     video_info = None
     error = None
 
@@ -83,7 +84,7 @@ def index():
             except Exception as e:
                 error = "Could not fetch video information. Please check the URL and try again."
 
-    return render_template('index.html', video_info=video_info, error=error)
+    return render_template('index.html', url=url, video_info=video_info, error=error)
 
 
 @app.route('/download', methods=['POST'])
