@@ -49,11 +49,11 @@
             </div>
         </div>
 
-        <div class="download-options">
+        <div class="download-options" id="downloadOptions">
             <h4>Download Options</h4>
 
             <form method="POST" action="/download" id="downloadForm">
-                <input type="hidden" name="url" value="{{ video_info.url }}"/>
+                <input type="hidden" name="url" value="{{ url }}"/>
 
                 <div class="mb-3">
                     <label class="form-label">Available Formats:</label>

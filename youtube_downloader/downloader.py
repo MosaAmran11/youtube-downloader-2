@@ -55,13 +55,19 @@ class Downloader:
             'ffmpeg_location': get_ffmpeg_path(),
             'progress_hooks': [self.progress_hook],
         }
+        self._youtubeDL = None
         self._info: dict = {}
+
+    @property
+    def youtubeDL(self):
+        if not self._youtubeDL:
+            self._youtubeDL = yt_dlp.YoutubeDL(self.ytdlp_options)
+        return self._youtubeDL
 
     @property
     def info(self):
         if not self._info:
-            self._info = yt_dlp.YoutubeDL(
-                self.ytdlp_options).extract_info(self.url, download=False)
+            self._info = self.youtubeDL.extract_info(self.url, download=False)
         return self._info
 
     @property
@@ -88,7 +94,7 @@ class Downloader:
                         'resolution': f.get('height', 'N/A'),
                         'quality': ('High Quality' if f.get('height', 0) >= 720
                                     else 'Medium Quality' if f.get('height', 0) >= 480
-                        else 'Low Quality'),
+                                    else 'Low Quality'),
                         'ext': f.get('ext', 'N/A'),
                         'filesize': format_size(f.get('filesize', 0)),
                         'vcodec': f.get('vcodec', 'none'),
@@ -101,7 +107,7 @@ class Downloader:
                         'resolution': f.get('height', 'N/A'),
                         'quality': ('High Quality' if f.get('height', 0) >= 720
                                     else 'Medium Quality' if f.get('height', 0) >= 480
-                        else 'Low Quality'),
+                                    else 'Low Quality'),
                         'ext': f.get('ext', 'N/A'),
                         'filesize': 0,
                         'vcodec': f.get('vcodec', 'none'),
@@ -116,7 +122,8 @@ class Downloader:
                 if best_format is None:
                     best_format = f
                 else:
-                    best_format = max(best_format, f, key=lambda x: x.get('abr', 0))
+                    best_format = max(
+                        best_format, f, key=lambda x: x.get('abr', 0))
         if not best_format:
             # If no audio formats found, return the first available format
             for f in self.info.get('formats', []):
@@ -153,7 +160,8 @@ class Downloader:
         # Determine if this is a video or audio format
         is_video = fmt.get('vcodec') != 'none'
 
-        path = os.path.join(self.path, 'Video' if is_video else 'Audio', '%(title)s.%(ext)s')
+        path = os.path.join(
+            self.path, 'Video' if is_video else 'Audio', '%(title)s (%(height)sp).%(ext)s' if is_video else '%(title)s.%(ext)s')
 
         # Update options based on format type
         if is_video:
@@ -214,13 +222,19 @@ class Downloader:
             })
 
         with yt_dlp.YoutubeDL(self.ytdlp_options) as ydl:
-            ydl.download([self.url])
             path = ydl.prepare_filename(self.info)
 
-        # For audio downloads, update the filename to .mp3
-        if not is_video:
             base_path = os.path.splitext(path)[0]
-            path = f"{base_path}.mp3"
+            if is_video:
+                path = f"{base_path}.mp4"
+            # For audio downloads, update the filename to .mp3
+            else:
+                path = f"{base_path}.mp3"
+
+            if os.path.exists(path):
+                return path
+
+            ydl.download([self.url])
 
         current_time = time.time()
 
@@ -229,15 +243,15 @@ class Downloader:
 
         return path
 
-    @staticmethod
-    def progress_hook(d):
-        if d['status'] == 'downloading':
-            total = d.get('total_bytes', 0)
-            downloaded = d['downloaded_bytes']
-            percentage = downloaded / total * 100 if total else 0
-            return (
-                f"Downloading: {percentage:.2f}% at {d.get('speed', 'Unknown')} B/s, ETA: {d.get('eta', 'Unknown')}s")
-        elif d['status'] == 'finished':
-            return (f"Download completed: {d['filename']}")
-        elif d['status'] == 'error':
-            return ("An error occurred during the download.")
+    # @staticmethod
+    # def progress_hook(d):
+    #     if d['status'] == 'downloading':
+    #         total = d.get('total_bytes', 0)
+    #         downloaded = d['downloaded_bytes']
+    #         percentage = downloaded / total * 100 if total else 0
+    #         return (
+    #             f"Downloading: {percentage:.2f}% at {d.get('speed', 'Unknown')} B/s, ETA: {d.get('eta', 'Unknown')}s")
+    #     elif d['status'] == 'finished':
+    #         return (f"Download completed: {d['filename']}")
+    #     elif d['status'] == 'error':
+    #         return ("An error occurred during the download.")

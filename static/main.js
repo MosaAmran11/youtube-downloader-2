@@ -42,9 +42,13 @@ function updateProgress() {
       } else if (data.status === "finished") {
         clearInterval(progressInterval);
         currentFilename = data.filename;
-        document.getElementById("progressContainer").style.display =
-          "none";
+        document.getElementById("progressContainer").style.display = "none";
         document.getElementById("fileActions").style.display = "block";
+      } else if (data.status === "error") {
+        clearInterval(progressInterval);
+        alert("Error during download: " + data.error);
+        document.getElementById("progressContainer").style.display = "none";
+        document.getElementById("downloadOptions").style.display = "block";
       }
     })
     .catch((error) => {
@@ -58,6 +62,7 @@ document
     e.preventDefault();
 
     const formData = new FormData(this);
+    document.getElementById("downloadOptions").style.display = "none";
     document.getElementById("progressContainer").style.display = "block";
     document.getElementById("fileActions").style.display = "none";
 
@@ -72,8 +77,7 @@ document
     })
       .then((response) => response.json())
       .then((data) => {
-        if (data.status === "success") {
-          currentFilename = data.filename;
+        if (data.status === "started") {
           // Start progress updates
           progressInterval = setInterval(updateProgress, 1000);
         } else {
@@ -94,10 +98,8 @@ document
       .catch((error) => console.error("Error:", error));
   });
 
-document
-  .getElementById("openFileBtn")
-  .addEventListener("click", function () {
-    fetch(`/open_file/${encodeURIComponent(currentFilename)}`)
-      .then((response) => response.json())
-      .catch((error) => console.error("Error:", error));
-  });
+document.getElementById("openFileBtn").addEventListener("click", function () {
+  fetch(`/open_file/${encodeURIComponent(currentFilename)}`)
+    .then((response) => response.json())
+    .catch((error) => console.error("Error:", error));
+});
