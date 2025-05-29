@@ -259,7 +259,6 @@ class Downloader:
             ydl.download([self.url])
             path = ydl.prepare_filename(self.info, outtmpl=path.replace(
                 '%(height)s', str(fmt.get('height'))))
-            print(path, '#'*50)
 
         base_path = os.path.splitext(path)[0]
         path = os.path.normpath(f"{base_path}.{'mp4' if is_video else 'mp3'}")
