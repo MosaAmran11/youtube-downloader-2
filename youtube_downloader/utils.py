@@ -1,4 +1,3 @@
-import winreg as reg
 import re
 import os
 import platform
@@ -123,6 +122,9 @@ def get_ffmpeg_path():
 
 
 def get_referenced_folder(folder_name: str):
+    if platform.system() != 'Windows':
+        return None
+    import winreg as reg
     registry_folder_names: dict[str, str] = {
         'Downloads': '{374DE290-123F-4565-9164-39C4925E467B}',
         'Saved Games': '{4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4}',
