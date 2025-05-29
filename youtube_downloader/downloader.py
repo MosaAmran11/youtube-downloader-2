@@ -2,6 +2,7 @@ import time
 from datetime import timedelta
 import os.path
 import platform
+import subprocess
 
 import yt_dlp
 from youtube_downloader.utils import get_referenced_folder, get_ffmpeg_path, download_latest_ffmpeg
@@ -50,7 +51,7 @@ class Downloader:
     def __init__(self, url: str):
         self.url: str = url
         self.progress_hook = ProgressHook()
-        self.ytdlp_options: dict = {
+        self.youtubeDL_options: dict = {
             # 'quiet': True,
             'ffmpeg_location': get_ffmpeg_path(),
             'progress_hooks': [self.progress_hook],
@@ -61,7 +62,7 @@ class Downloader:
     @property
     def youtubeDL(self):
         if not self._youtubeDL:
-            self._youtubeDL = yt_dlp.YoutubeDL(self.ytdlp_options)
+            self._youtubeDL = yt_dlp.YoutubeDL(self.youtubeDL_options)
         return self._youtubeDL
 
     @property
@@ -94,7 +95,7 @@ class Downloader:
                         'resolution': f.get('height', 'N/A'),
                         'quality': ('High Quality' if f.get('height', 0) >= 720
                                     else 'Medium Quality' if f.get('height', 0) >= 480
-                        else 'Low Quality'),
+                                    else 'Low Quality'),
                         'ext': f.get('ext', 'N/A'),
                         'filesize': format_size(f.get('filesize', 0)),
                         'vcodec': f.get('vcodec', 'none'),
@@ -107,7 +108,7 @@ class Downloader:
                         'resolution': f.get('height', 'N/A'),
                         'quality': ('High Quality' if f.get('height', 0) >= 720
                                     else 'Medium Quality' if f.get('height', 0) >= 480
-                        else 'Low Quality'),
+                                    else 'Low Quality'),
                         'ext': f.get('ext', 'N/A'),
                         'filesize': 0,
                         'vcodec': f.get('vcodec', 'none'),
@@ -140,15 +141,44 @@ class Downloader:
             'acodec': best_format.get('acodec', 'none'),
         }]
 
-    def get_thumbnail(self) -> str:
-        """Get thumbnail URL"""
-        return self.info.get('thumbnail', '')
+    def get_thumbnail(self) -> dict:
+        """Get the best thumbnail info for album cover
+        :return: A dictionary containing the best thumbnail info."""
+        thumbnails = self.info.get('thumbnails', [])
+        if not thumbnails:
+            return {}
+        filtered_thumbnails = [t for t in thumbnails if t.get(
+            'width', 0) == t.get('height', 1)]
+        # We set the default value of `get()` method with different values to break
+        # the condition if the target attributes (`width` and `height`) do not exist.
+
+        if filtered_thumbnails:
+            # Sort thumbnails by resolution and return the best one
+            return max(filtered_thumbnails, key=lambda t: t.get('height', 0))
+        else:
+            print("No square thumbnails found. Selecting the default thumbnail.")
+            return {'url': self.info.get('thumbnail', '')}
+
+    def download_thumbnail(self) -> str:
+        """Download the best thumbnail for album cover.
+        :return: The path to the downloaded thumbnail."""
+        params = {'outtmpl': {
+            'default': os.path.join(self.path, '.thumbnails', f'{self.info.get('title')}_thumbnail.jpg')
+        }}
+        best_thumbnail = self.get_thumbnail()
+        thumbnail_url = best_thumbnail.get('url', '')
+        if thumbnail_url:
+            self.youtubeDL.params.update(params)
+            self.youtubeDL.download(thumbnail_url)
+            print(
+                f"Downloaded thumbnail: {': '.join(best_thumbnail.get('id', ''))}{thumbnail_url}")
+        return params['outtmpl']['default']
 
     def get_video_info(self) -> dict:
         return {
             'title': self.info.get('title', 'Unknown Title'),
             'duration': format_duration(self.info.get('duration', 0)),
-            'thumbnail': self.get_thumbnail(),
+            'thumbnail': self.get_thumbnail().get('url', ''),
             'formats': self.get_video_formats(),
             'audio_formats': self.get_audio_formats()
         }
@@ -164,12 +194,12 @@ class Downloader:
             self.path, 'Video' if is_video else 'Audio',
             '%(title)s (%(height)sp).%(ext)s' if is_video else '%(title)s.%(ext)s')
 
-        self.ytdlp_options.update({'outtmpl': {'default': path}, })
+        self.youtubeDL_options.update({'outtmpl': {'default': path}, })
 
         # Update options based on format type
         if is_video:
             video_format = fmt.get('format_id', 'bestvideo')
-            self.ytdlp_options.update({
+            self.youtubeDL_options.update({
                 # Combine selected video with best audio
                 'format': f'{video_format}+bestaudio',
                 'postprocessors': [{
@@ -177,6 +207,11 @@ class Downloader:
                     'preferedformat': 'mp4',
                 }],
                 'merge_output_format': 'mp4',
+                'postprocessor_args': [
+                    '-c:v', 'copy',  # Copy video stream without re-encoding
+                    '-c:a', 'aac',   # Convert audio to AAC
+                    '-b:a', '192k',  # Set audio bitrate to 192k
+                ],
             })
         else:
             # Get the audio quality from the selected format
@@ -193,7 +228,7 @@ class Downloader:
                 'comment': '',
             }
 
-            self.ytdlp_options.update({
+            self.youtubeDL_options.update({
                 'format': fmt.get('format_id', 'bestaudio'),
                 'writethumbnail': True,  # Download thumbnail
                 'postprocessors': [
@@ -220,9 +255,11 @@ class Downloader:
                 ],
             })
 
-        with yt_dlp.YoutubeDL(self.ytdlp_options) as ydl:
+        with yt_dlp.YoutubeDL(self.youtubeDL_options) as ydl:
             ydl.download([self.url])
-            path = ydl.prepare_filename(self.info)
+            path = ydl.prepare_filename(self.info, outtmpl=path.replace(
+                '%(height)s', str(fmt.get('height'))))
+            print(path, '#'*50)
 
         base_path = os.path.splitext(path)[0]
         path = os.path.normpath(f"{base_path}.{'mp4' if is_video else 'mp3'}")
