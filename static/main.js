@@ -79,7 +79,7 @@ document
       .then((data) => {
         if (data.status === "started") {
           // Start progress updates
-          progressInterval = setInterval(updateProgress, 1000);
+          progressInterval = setInterval(updateProgress, 500);
         } else {
           alert("Error: " + data.error);
         }
