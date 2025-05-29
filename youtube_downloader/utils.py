@@ -98,6 +98,11 @@ def download_latest_ffmpeg(base_path: str):
 
 
 def get_ffmpeg_path():
+    if platform.system() == 'Linux':
+        # Check if ffmpeg is installed and in PATH
+        if shutil.which('ffmpeg'):
+            return shutil.which('ffmpeg')
+
     base_path: str = os.path.join(os.path.dirname(__file__), 'bin', 'ffmpeg')
     ffmpeg_dir = None
 
