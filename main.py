@@ -11,6 +11,7 @@ app = Flask(__name__)
 # Global variable to store downloader instance
 # Downloader instance with empty URL. (Instead of `None` to avoid NoneType errors)
 current_downloader = Downloader('')
+thread = None
 
 
 def format_duration(seconds):
@@ -45,30 +46,6 @@ def open_file(filepath):
         subprocess.run(["open", filepath])
     else:  # Linux
         subprocess.run(["xdg-open", filepath])
-
-
-# class ProgressHook:
-#     def __init__(self):
-#         self.progress = {
-#             'status': 'downloading',
-#             'percentage': '0%',
-#             'downloaded_bytes': 0,
-#             'total_bytes': 0,
-#             'speed': 0,
-#             'filename': ''
-#         }
-#
-#     def __call__(self, d):
-#         if d['status'] == 'downloading':
-#             self.progress['status'] = 'downloading'
-#             self.progress['percentage'] = d.get('_percent_str', '0%').strip()
-#             self.progress['downloaded_bytes'] = d.get('downloaded_bytes', 0)
-#             self.progress['total_bytes'] = d.get('total_bytes', 0)
-#             self.progress['speed'] = d.get('speed', 0)
-#             self.progress['filename'] = d.get('filename', '')
-#         elif d['status'] == 'finished':
-#             self.progress['status'] = 'finished'
-#             self.progress['filename'] = d.get('filename', '')
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -132,6 +109,7 @@ def download():
         }
 
         # Start the download thread
+        global thread
         thread = threading.Thread(target=download_thread)
         thread.daemon = True
         thread.start()
@@ -145,6 +123,8 @@ def download():
 @app.route('/progress')
 def get_progress():
     if current_downloader and hasattr(current_downloader, 'progress_hook'):
+        if thread and thread.is_alive():
+            current_downloader.progress_hook.progress['status'] = 'downloading'
         return jsonify(current_downloader.progress_hook.progress)
     return jsonify({'status': 'not_started'})
 

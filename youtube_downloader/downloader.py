@@ -94,7 +94,7 @@ class Downloader:
                         'resolution': f.get('height', 'N/A'),
                         'quality': ('High Quality' if f.get('height', 0) >= 720
                                     else 'Medium Quality' if f.get('height', 0) >= 480
-                                    else 'Low Quality'),
+                        else 'Low Quality'),
                         'ext': f.get('ext', 'N/A'),
                         'filesize': format_size(f.get('filesize', 0)),
                         'vcodec': f.get('vcodec', 'none'),
@@ -107,7 +107,7 @@ class Downloader:
                         'resolution': f.get('height', 'N/A'),
                         'quality': ('High Quality' if f.get('height', 0) >= 720
                                     else 'Medium Quality' if f.get('height', 0) >= 480
-                                    else 'Low Quality'),
+                        else 'Low Quality'),
                         'ext': f.get('ext', 'N/A'),
                         'filesize': 0,
                         'vcodec': f.get('vcodec', 'none'),
@@ -161,13 +161,15 @@ class Downloader:
         is_video = fmt.get('vcodec') != 'none'
 
         path = os.path.join(
-            self.path, 'Video' if is_video else 'Audio', '%(title)s (%(height)sp).%(ext)s' if is_video else '%(title)s.%(ext)s')
+            self.path, 'Video' if is_video else 'Audio',
+            '%(title)s (%(height)sp).%(ext)s' if is_video else '%(title)s.%(ext)s')
+
+        self.ytdlp_options.update({'outtmpl': {'default': path}, })
 
         # Update options based on format type
         if is_video:
             video_format = fmt.get('format_id', 'bestvideo')
             self.ytdlp_options.update({
-                'outtmpl': path,
                 # Combine selected video with best audio
                 'format': f'{video_format}+bestaudio',
                 'postprocessors': [{
@@ -186,14 +188,12 @@ class Downloader:
                 'title': self.info.get('title', 'Unknown Title'),
                 'artist': self.info.get('artists', [self.info.get('uploader', 'Unknown Artist')])[0],
                 'album': self.info.get('album', self.info.get('title', 'Unknown Album')),
-                # 'track': self.info.get('track', ''),
                 'date': str(self.info.get('release_year', self.info.get('upload_date', '')[:4])),
                 'description': self.info.get('description', ''),
                 'comment': '',
             }
 
             self.ytdlp_options.update({
-                'outtmpl': path,
                 'format': fmt.get('format_id', 'bestaudio'),
                 'writethumbnail': True,  # Download thumbnail
                 'postprocessors': [
@@ -214,7 +214,6 @@ class Downloader:
                     '-metadata', f'title={metadata["title"]}',
                     '-metadata', f'artist={metadata["artist"]}',
                     '-metadata', f'album={metadata["album"]}',
-                    # '-metadata', f'track={metadata["track"]}',
                     '-metadata', f'date={metadata["date"]}',
                     '-metadata', f'description={metadata["description"]}',
                     '-metadata', f'comment={metadata["comment"]}',
@@ -222,19 +221,11 @@ class Downloader:
             })
 
         with yt_dlp.YoutubeDL(self.ytdlp_options) as ydl:
+            ydl.download([self.url])
             path = ydl.prepare_filename(self.info)
 
-            base_path = os.path.splitext(path)[0]
-            if is_video:
-                path = f"{base_path}.mp4"
-            # For audio downloads, update the filename to .mp3
-            else:
-                path = f"{base_path}.mp3"
-
-            if os.path.exists(path):
-                return path
-
-            ydl.download([self.url])
+        base_path = os.path.splitext(path)[0]
+        path = os.path.normpath(f"{base_path}.{'mp4' if is_video else 'mp3'}")
 
         current_time = time.time()
 
