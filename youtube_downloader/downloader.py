@@ -37,7 +37,7 @@ class ProgressHook:
     def __call__(self, d):
         if d['status'] == 'downloading':
             # self.progress['status'] = 'downloading'
-            self.progress['percentage'] = d.get('_percent_str', '0%').strip()
+            self.progress['percentage'] = "{:.2f}%".format(d.get('_percent', 0))
             self.progress['downloaded_bytes'] = d.get('downloaded_bytes', 0)
             self.progress['total_bytes'] = d.get('total_bytes', 0)
             self.progress['speed'] = d.get('speed', 0)
