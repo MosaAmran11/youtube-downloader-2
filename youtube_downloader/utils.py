@@ -8,7 +8,6 @@ import shutil
 import tempfile
 from tkinter import filedialog, messagebox
 
-
 RED: str = '\033[31m'
 GREEN: str = '\033[32m'
 YELLOW: str = '\033[33m'
@@ -99,7 +98,6 @@ def download_latest_ffmpeg(base_path: str):
 
 
 def get_ffmpeg_path():
-    # base_path: str = os.path.join(os.path.dirname(__file__), 'bin', 'ffmpeg', 'ffmpeg-7.1-essentials_build', 'bin')
     base_path: str = os.path.join(os.path.dirname(__file__), 'bin', 'ffmpeg')
     ffmpeg_dir = None
 
@@ -154,62 +152,6 @@ def validate_url(url: str) -> bool:
     """Validates if the provided string is a proper YouTube URL."""
     youtube_url_pattern = r"(https?://)?(www\.)?(youtube|youtu|youtube-nocookie|music\.youtube)\.(com|be)/.+"
     return bool(re.match(youtube_url_pattern, url))
-
-
-def open_dir(path: str) -> int:
-    return os.system(f'explorer /select,"{path}"') if platform.system() == "Windows" else os.system(
-        f'nautilus "{path}"')
-
-
-def select_dir(
-        initial_dir: str | bytes | os.PathLike[str] | os.PathLike[bytes] | None = None,
-        title: str | None = 'Select directory') -> str:
-    return filedialog.askdirectory(initialdir=initial_dir, title=title)
-
-
-def ask_select_dir(message: str, title: str = 'Select a directory?'):
-    return messagebox.askyesno(title=title, message=message)
-
-
-def ask_video_audio(
-        message: str = "Video or Audio?\n"
-                       'Yes = Video\n'
-                       'No = Audio\n',
-        title: str = 'Select a subtype'
-) -> bool:
-    """
-    return True for Video, False for Audio
-    """
-    return messagebox.askyesno(title=title, message=message)
-
-
-def show_title(title, subtype: str = 'video', text: str = '{} title:'):
-    print(
-        text.format(subtype.capitalize())
-    )
-    print(GREEN, title, RESET)
-
-
-def exit_message():
-    print(YELLOW, 'Thanks for using our YouTube Downloader.', RESET)
-    print(CYAN, '\tMADE BY MAA\t'.center(50, "#"), RESET)
-    # sleep(0.8)
-    print(f'{RED}Exiting from downloader...{RESET}')
-    # sleep(0.8)
-
-
-def show_download_message(media_type='video', text=''):
-    print(
-        CYAN,
-        f'Downloading the {media_type.capitalize()} {text}\n',
-        'It may take a long time. Please wait...',
-        RESET,
-        sep=''
-    )
-
-
-def is_file_exist(path: str) -> bool:
-    return os.path.exists(path)
 
 
 if __name__ == '__main__':
