@@ -6,7 +6,6 @@ import zipfile
 import tarfile
 import shutil
 import tempfile
-from tkinter import filedialog, messagebox
 
 RED: str = '\033[31m'
 GREEN: str = '\033[32m'
