@@ -1,0 +1,24 @@
+import platform
+import subprocess
+import sys
+
+
+def install_requirements():
+    """Install the required packages using pip."""
+    system = platform.system()
+
+    # Install system dependencies on Linux
+    if system == "Linux":
+        subprocess.call("sudo apt update".split(), shell=True)
+        subprocess.call(
+            "sudo apt install python3-pip python3-venv".split(), shell=True)
+
+    # Create a virtual environment and install requirements
+    subprocess.call([sys.executable].append(
+        " -m venv venv".split()), shell=True)
+    subprocess.call([sys.executable].append(
+        " -m pip install -r requirements.txt".split()), shell=True)
+
+
+if __name__ == "__main__":
+    install_requirements()
