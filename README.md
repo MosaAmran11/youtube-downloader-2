@@ -95,8 +95,6 @@ See [requirements.txt](requirements.txt). Main dependencies:
 
 MIT License
 
-MIT License
-
 ```text
 Copyright (c) 2025 Mosa Amran Alawadhi
 
