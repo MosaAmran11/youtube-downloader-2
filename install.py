@@ -14,11 +14,10 @@ def install_requirements():
             "sudo apt install python3-pip python3-venv".split(), shell=True)
 
     # Create a virtual environment and install requirements
-    subprocess.call([sys.executable].append(
-        " -m venv venv".split()), shell=True)
+    subprocess.call(f"{sys.executable} -m venv venv".split(), shell=True)
     subprocess.call("source ./venv/bin/activate".split(), shell=True)
-    subprocess.call([sys.executable].append(
-        " -m pip install -r requirements.txt".split()), shell=True)
+    subprocess.call(
+        f"{sys.executable} -m pip install -r requirements.txt".split(), shell=True)
 
 
 if __name__ == "__main__":
