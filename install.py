@@ -11,7 +11,7 @@ def install_requirements():
     if system == "Linux":
         subprocess.run("sudo apt update".split())
         subprocess.run(
-            "sudo apt install python3-pip python3-venv".split())
+            "sudo apt install python3-pip python3-venv ffmpeg".split())
 
     # Create a virtual environment and install requirements
     subprocess.run(f"{sys.executable} -m venv venv".split(),
