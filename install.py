@@ -16,6 +16,7 @@ def install_requirements():
     # Create a virtual environment and install requirements
     subprocess.call([sys.executable].append(
         " -m venv venv".split()), shell=True)
+    subprocess.call("source ./venv/bin/activate".split(), shell=True)
     subprocess.call([sys.executable].append(
         " -m pip install -r requirements.txt".split()), shell=True)
 
