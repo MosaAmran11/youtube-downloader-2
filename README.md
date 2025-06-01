@@ -61,8 +61,17 @@ The author is not responsible for any misuse of this tool.
 
 1. Start the server:
 
-   ```bash
+   ***1. On Windows***
+
+   ```cmd
    python main.py
+   ```
+
+   ***2. On Linux***
+
+   ```bash
+   source venv/bin/activate
+   python3 main.py
    ```
 
 2. Open your browser and go to [http://localhost:5000](http://localhost:5000)
