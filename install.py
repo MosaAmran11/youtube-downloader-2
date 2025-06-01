@@ -17,8 +17,7 @@ def install_requirements():
     subprocess.run(f"{sys.executable} -m venv venv".split(),
                    capture_output=True)
     subprocess.run(
-        f"venv/{'bin/python3' if platform.system() == 'Linux' else
-                'Scripts/python.exe'} -m pip install -r requirements.txt".split())
+        f"venv/{'bin/python3' if platform.system() == 'Linux' else 'Scripts/python.exe'} -m pip install -r requirements.txt".split())
 
 
 if __name__ == "__main__":
