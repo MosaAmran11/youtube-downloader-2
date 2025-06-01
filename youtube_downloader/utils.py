@@ -105,10 +105,11 @@ def get_ffmpeg_path():
     base_path: str = os.path.join(os.path.dirname(__file__), 'bin', 'ffmpeg')
     ffmpeg_dir = None
 
-    for entry in os.listdir(base_path):
-        if os.path.isdir(os.path.join(base_path, entry)) and entry.startswith('ffmpeg-'):
-            ffmpeg_dir = entry
-            break
+    if os.path.exists(base_path):
+        for entry in os.listdir(base_path):
+            if os.path.isdir(os.path.join(base_path, entry)) and entry.startswith('ffmpeg-'):
+                ffmpeg_dir = entry
+                break
 
     if ffmpeg_dir:
         match = re.search(
