@@ -148,6 +148,4 @@ def open_file_route(filename):
 
 
 if __name__ == '__main__':
-    if platform.system() == "Linux":
-        subprocess.call("source ./venv/bin/activate".split(), shell=True)
     app.run(debug=True)
