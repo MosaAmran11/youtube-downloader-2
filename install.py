@@ -9,16 +9,16 @@ def install_requirements():
 
     # Install system dependencies on Linux
     if system == "Linux":
-        subprocess.run("sudo apt update".split(), capture_output=True)
+        subprocess.run("sudo apt update".split())
         subprocess.run(
-            "sudo apt install python3-pip python3-venv".split(), capture_output=True)
+            "sudo apt install python3-pip python3-venv".split())
 
     # Create a virtual environment and install requirements
     subprocess.run(f"{sys.executable} -m venv venv".split(),
                    capture_output=True)
     subprocess.run(
         f"venv/{'bin/python3' if platform.system() == 'Linux' else
-                'Scripts/python.exe'} -m pip install -r requirements.txt".split(), capture_output=True)
+                'Scripts/python.exe'} -m pip install -r requirements.txt".split())
 
 
 if __name__ == "__main__":
