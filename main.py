@@ -30,12 +30,11 @@ def format_size(size_bytes):
 def open_file_location(filepath):
     """Open file location in file explorer"""
     if platform.system() == "Windows":
-        # os.startfile(os.path.dirname(filepath))
         os.system(f'explorer /select,"{os.path.normpath(filepath)}"')
     elif platform.system() == "Darwin":  # macOS
-        subprocess.run(["open", os.path.dirname(filepath)])
+        os.system(f'open "{os.path.dirname(filepath)}"')
     else:  # Linux
-        subprocess.run(["xdg-open", os.path.dirname(filepath)])
+        os.system(f'xdg-open "{os.path.dirname(filepath)}"')
 
 
 def open_file(filepath):
@@ -132,7 +131,9 @@ def get_progress():
 @app.route('/open_location/<path:filename>')
 def open_location(filename):
     try:
-        open_file_location(filename)
+        # Convert URL-encoded path to absolute path
+        abs_path = os.path.abspath(filename)
+        open_file_location(abs_path)
         return jsonify({'status': 'success'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -141,7 +142,9 @@ def open_location(filename):
 @app.route('/open_file/<path:filename>')
 def open_file_route(filename):
     try:
-        open_file(filename)
+        # Convert URL-encoded path to absolute path
+        abs_path = os.path.abspath(filename)
+        open_file(abs_path)
         return jsonify({'status': 'success'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
