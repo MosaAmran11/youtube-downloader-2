@@ -24,7 +24,7 @@ The author is not responsible for any misuse of this tool.
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/MosaAmran11/youtube_downloader.git
+   git clone https://github.com/MosaAmran11/youtube-downloader-2.git
    cd youtube-downloader-2
    ```
 
@@ -41,7 +41,7 @@ The author is not responsible for any misuse of this tool.
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/MosaAmran11/youtube_downloader.git
+   git clone https://github.com/MosaAmran11/youtube-downloader-2.git
    cd youtube-downloader-2
    ```
 
