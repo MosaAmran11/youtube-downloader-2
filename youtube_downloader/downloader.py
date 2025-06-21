@@ -2,7 +2,8 @@ import time
 from datetime import timedelta
 import os.path
 import platform
-import subprocess
+from mutagen.id3 import ID3, APIC, error
+from mutagen.mp3 import MP3
 
 import yt_dlp
 from youtube_downloader.utils import get_referenced_folder, get_ffmpeg_path, download_latest_ffmpeg
@@ -230,16 +231,16 @@ class Downloader:
 
             self.youtubeDL_options.update({
                 'format': fmt.get('format_id', 'bestaudio'),
-                'writethumbnail': True,  # Download thumbnail
+                # 'writethumbnail': True,  # Download thumbnail
                 'postprocessors': [
                     {
                         'key': 'FFmpegExtractAudio',
                         'preferredcodec': 'mp3',
                         'preferredquality': str(audio_quality),
                     },
-                    {
-                        'key': 'EmbedThumbnail',  # Embed thumbnail in the audio file
-                    },
+                    # {
+                    #     'key': 'EmbedThumbnail',  # Embed thumbnail in the audio file
+                    # },
                     {
                         'key': 'FFmpegMetadata',  # Add metadata
                         'add_metadata': True,
@@ -270,15 +271,31 @@ class Downloader:
 
         return path
 
-    # @staticmethod
-    # def progress_hook(d):
-    #     if d['status'] == 'downloading':
-    #         total = d.get('total_bytes', 0)
-    #         downloaded = d['downloaded_bytes']
-    #         percentage = downloaded / total * 100 if total else 0
-    #         return (
-    #             f"Downloading: {percentage:.2f}% at {d.get('speed', 'Unknown')} B/s, ETA: {d.get('eta', 'Unknown')}s")
-    #     elif d['status'] == 'finished':
-    #         return (f"Download completed: {d['filename']}")
-    #     elif d['status'] == 'error':
-    #         return ("An error occurred during the download.")
+    def _embed_thumbnail(self, audio_filename: str, thumbnail_path: str):
+        # Embed the thumbnail image into the audio file
+        try:
+            audio = MP3(audio_filename, ID3=ID3)
+            audio.tags.add(APIC(
+                encoding=3,  # 3 = utf-8
+                mime='image/jpeg',  # MIME type of the image
+                type=3,  # 3 = cover image
+                desc='Cover',
+                data=open(thumbnail_path, 'rb').read()
+            ))
+            audio.save()
+        except error:
+            # If the file has no existing ID3 tags, add them
+            audio = MP3(audio_filename)
+            audio.add_tags()
+            audio.tags.add(APIC(
+                encoding=3,
+                mime='image/jpeg',
+                type=3,
+                desc='Cover',
+                data=open(thumbnail_path, 'rb').read()
+            ))
+            audio.save()
+
+        # Clean up the downloaded thumbnail image
+        os.remove(thumbnail_path)
+
