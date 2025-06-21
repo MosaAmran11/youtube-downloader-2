@@ -1,11 +1,15 @@
 import re
 import os
 import platform
+from typing import TextIO
 import requests
 import zipfile
 import tarfile
 import shutil
 import tempfile
+from PIL import Image
+from mutagen.id3 import ID3, APIC, error
+from mutagen.mp3 import MP3
 
 RED: str = '\033[31m'
 GREEN: str = '\033[32m'
@@ -119,7 +123,8 @@ def get_ffmpeg_path():
 
         for i in os.listdir(os.path.join(base_path, ffmpeg_dir, 'bin')):
             if i.startswith('ffmpeg'):
-                pth = os.path.normpath(os.path.join(base_path, ffmpeg_dir, 'bin', i))
+                pth = os.path.normpath(os.path.join(
+                    base_path, ffmpeg_dir, 'bin', i))
                 return pth
     return None
 
@@ -153,11 +158,107 @@ def get_referenced_folder(folder_name: str):
         return None
 
 
+def safe_name(name: str) -> str:
+    """
+    Sanitize a string to be safe for use as a file name on most file systems.
+    Removes or replaces characters not allowed in Windows, macOS, and Linux file names.
+    """
+    # Remove or replace forbidden characters: \ / : * ? " < > | and control chars
+    name = re.sub(r'[\\/:*?"<>|\r\n\t]', '_', name)
+    # Remove non-printable/control characters
+    name = ''.join(c for c in name if c.isprintable() and ord(c) > 31)
+    # Optionally, strip leading/trailing whitespace and dots (not allowed on Windows)
+    name = name.strip().strip('.')
+    # Limit length (most filesystems support 255 bytes for a filename)
+    return name[:250]  # The rest 5 characters are reserved for file extension
+
+
+def paths() -> dict[str, str]:
+    """Returns a dictionary of paths for various directories."""
+    app_name: str = "Youtube Downloader MAA"
+    if platform.system() == 'Windows':
+        base_path = os.path.join(
+            get_referenced_folder('Downloads'),
+            app_name)
+    else:
+        base_path = os.path.join(
+            os.getenv("HOME"),
+            'Downloads',
+            app_name)
+    return {
+        'home': base_path,
+        'video': os.path.join(base_path, 'Video'),  # Directory for video files
+        'audio': os.path.join(base_path, 'Audio'),  # Directory for audio files
+        # Directory for subtitle files
+        'subtitle': os.path.join(base_path, 'Subtitles'),
+        # Temporary download path for fragmented files
+        'temp': os.path.join(base_path, '.temp'),
+        # Directory for thumbnail images
+        'thumbnail': os.path.join(base_path, '.thumbnails'),
+    }
+
+
+def embed_thumbnail(audio_filename: str, thumbnail_path: str):
+    print("Embedding thumbnail into audio file...")
+
+    # Ensure thumbnail is JPEG
+    jpeg_thumb_path = thumbnail_path
+    try:
+        with Image.open(thumbnail_path) as img:
+            if img.format != 'JPEG':
+                jpeg_thumb_path = thumbnail_path.rsplit('.', 1)[0] + '.jpg'
+                img.convert('RGB').save(jpeg_thumb_path, 'JPEG')
+    except Exception as e:
+        jpeg_thumb_path = thumbnail_path  # fallback
+
+    # Embed the thumbnail image into the audio file
+    try:
+        audio = MP3(audio_filename, ID3=ID3)
+        audio.tags.add(APIC(
+            encoding=3,  # 3 = utf-8
+            mime='image/jpeg',  # MIME type of the image
+            type=3,  # 3 = cover image
+            desc='Cover',
+            data=open(jpeg_thumb_path, 'rb').read()
+        ))
+        audio.save(v2_version=3)
+    except error:
+        # If the file has no existing ID3 tags, add them
+        audio = MP3(audio_filename)
+        audio.add_tags()
+        audio.tags.add(APIC(
+            encoding=3,
+            mime='image/jpeg',
+            type=3,
+            desc='Cover',
+            data=open(jpeg_thumb_path, 'rb').read()
+        ))
+        audio.save(v2_version=3)
+
+    # Clean up the downloaded thumbnail image
+    os.remove(thumbnail_path)
+
+
+def download_thumbnail(url: str, title: str = 'thumbnail') -> str:
+    """Download the best thumbnail for album cover.
+    :param info: A dictionary containing video information, including the thumbnail URL and title.
+    :param path: The path where the thumbnail will be saved.
+    :return: The path to the downloaded thumbnail."""
+    path = os.path.join(paths().get('thumbnail'),
+                        f'{safe_name(title)}_thumbnail.png')
+    os.makedirs(paths().get('thumbnail'), exist_ok=True)
+
+    print("Downloading thumbnail...")
+
+    thumbnail_data = requests.get(url).content
+    with open(path, 'wb') as f:
+        f.write(thumbnail_data)
+
+    print(f"Downloaded thumbnail: {path} ({len(thumbnail_data)} bytes)")
+    return path
+
+
 def validate_url(url: str) -> bool:
     """Validates if the provided string is a proper YouTube URL."""
     youtube_url_pattern = r"(https?://)?(www\.)?(youtube|youtu|youtube-nocookie|music\.youtube)\.(com|be)/.+"
     return bool(re.match(youtube_url_pattern, url))
-
-
-if __name__ == '__main__':
-    print(get_ffmpeg_path())

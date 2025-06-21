@@ -1,12 +1,9 @@
 import time
 from datetime import timedelta
 import os.path
-import platform
-from mutagen.id3 import ID3, APIC, error
-from mutagen.mp3 import MP3
 
 import yt_dlp
-from youtube_downloader.utils import get_referenced_folder, get_ffmpeg_path, download_latest_ffmpeg
+from youtube_downloader.utils import download_thumbnail, get_ffmpeg_path, embed_thumbnail, paths
 
 
 def format_duration(seconds: float) -> str:
@@ -38,7 +35,8 @@ class ProgressHook:
     def __call__(self, d):
         if d['status'] == 'downloading':
             # self.progress['status'] = 'downloading'
-            self.progress['percentage'] = "{:.2f}%".format(d.get('_percent', 0))
+            self.progress['percentage'] = "{:.2f}%".format(
+                d.get('_percent', 0))
             self.progress['downloaded_bytes'] = d.get('downloaded_bytes', 0)
             self.progress['total_bytes'] = d.get('total_bytes', 0)
             self.progress['speed'] = d.get('speed', 0)
@@ -74,17 +72,7 @@ class Downloader:
 
     @property
     def path(self):
-        app_name: str = "Youtube Downloader MAA"
-        if platform.system() == 'Windows':
-            base_path = os.path.join(
-                get_referenced_folder('Downloads'),
-                app_name)
-        else:
-            base_path = os.path.join(
-                os.getenv("HOME"),
-                'Downloads',
-                app_name)
-        return base_path
+        return paths().get('home')
 
     def get_video_formats(self) -> list[dict]:
         formats = []
@@ -159,21 +147,6 @@ class Downloader:
         else:
             print("No square thumbnails found. Selecting the default thumbnail.")
             return {'url': self.info.get('thumbnail', '')}
-
-    def download_thumbnail(self) -> str:
-        """Download the best thumbnail for album cover.
-        :return: The path to the downloaded thumbnail."""
-        params = {'outtmpl': {
-            'default': os.path.join(self.path, '.thumbnails', f'{self.info.get('title')}_thumbnail.jpg')
-        }}
-        best_thumbnail = self.get_thumbnail()
-        thumbnail_url = best_thumbnail.get('url', '')
-        if thumbnail_url:
-            self.youtubeDL.params.update(params)
-            self.youtubeDL.download(thumbnail_url)
-            print(
-                f"Downloaded thumbnail: {': '.join(best_thumbnail.get('id', ''))}{thumbnail_url}")
-        return params['outtmpl']['default']
 
     def get_video_info(self) -> dict:
         return {
@@ -263,39 +236,13 @@ class Downloader:
 
         base_path = os.path.splitext(path)[0]
         path = os.path.normpath(f"{base_path}.{'mp4' if is_video else 'mp3'}")
+        thumbnail_path = download_thumbnail(self.get_thumbnail().get('url', ''),
+                                            self.info.get('title', 'thumbnail'))
 
+        embed_thumbnail(path, thumbnail_path)
+
+        # Update the file's modification time to the current time
         current_time = time.time()
-
-        # Update the file's modification time
         os.utime(path, (current_time, current_time))
 
         return path
-
-    def _embed_thumbnail(self, audio_filename: str, thumbnail_path: str):
-        # Embed the thumbnail image into the audio file
-        try:
-            audio = MP3(audio_filename, ID3=ID3)
-            audio.tags.add(APIC(
-                encoding=3,  # 3 = utf-8
-                mime='image/jpeg',  # MIME type of the image
-                type=3,  # 3 = cover image
-                desc='Cover',
-                data=open(thumbnail_path, 'rb').read()
-            ))
-            audio.save()
-        except error:
-            # If the file has no existing ID3 tags, add them
-            audio = MP3(audio_filename)
-            audio.add_tags()
-            audio.tags.add(APIC(
-                encoding=3,
-                mime='image/jpeg',
-                type=3,
-                desc='Cover',
-                data=open(thumbnail_path, 'rb').read()
-            ))
-            audio.save()
-
-        # Clean up the downloaded thumbnail image
-        os.remove(thumbnail_path)
-
