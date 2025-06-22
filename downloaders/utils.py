@@ -181,9 +181,9 @@ def prepare_filename(info: dict, dir_type: str, outtmpl: str) -> str:
     :param outtmpl: The output template for the filename.
     :return: An absolute path with formatted filename string.
     """
-    filename = outtmpl % info
+    filename = safe_name(outtmpl % info)
     file_path = os.path.join(paths().get(dir_type), filename)
-    return safe_name(file_path)
+    return file_path
 
 
 def paths() -> dict[str, str]:
