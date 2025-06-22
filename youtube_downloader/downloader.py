@@ -52,6 +52,7 @@ class Downloader:
         self.progress_hook = ProgressHook()
         self.youtubeDL_options: dict = {
             # 'quiet': True,
+            'paths': paths(),
             'ffmpeg_location': get_ffmpeg_path(),
             'progress_hooks': [self.progress_hook],
         }
@@ -151,7 +152,7 @@ class Downloader:
     def get_video_info(self) -> dict:
         return {
             'title': self.info.get('title', 'Unknown Title'),
-            'duration': format_duration(self.info.get('duration', 0)),
+            'duration': self.info.get('duration_string', '0:00'),
             'thumbnail': self.get_thumbnail().get('url', ''),
             'formats': self.get_video_formats(),
             'audio_formats': self.get_audio_formats()
@@ -163,12 +164,12 @@ class Downloader:
         :return: The downloaded file path."""
         # Determine if this is a video or audio format
         is_video = fmt.get('vcodec') != 'none'
+        fmt_type = 'video' if is_video else 'audio'
 
-        path = os.path.join(
-            self.path, 'Video' if is_video else 'Audio',
-            '%(title)s (%(height)sp).%(ext)s' if is_video else '%(title)s.%(ext)s')
+        outtmpl = '%(title)s (%(height)sp).%(ext)s' if is_video else '%(title)s.%(ext)s'
+        path = os.path.join(paths().get(fmt_type), outtmpl)
 
-        self.youtubeDL_options.update({'outtmpl': {'default': path}, })
+        self.youtubeDL_options.update({'outtmpl': {'default': outtmpl}})
 
         # Update options based on format type
         if is_video:
@@ -195,7 +196,7 @@ class Downloader:
             # Get metadata from the video info
             metadata = {
                 'title': self.info.get('title', 'Unknown Title'),
-                'artist': self.info.get('artists', [self.info.get('uploader', 'Unknown Artist')])[0],
+                'artist': ', '.join(self.info.get('artists', [self.info.get('uploader', 'Unknown Artist')])),
                 'album': self.info.get('album', self.info.get('title', 'Unknown Album')),
                 'date': str(self.info.get('release_year', self.info.get('upload_date', '')[:4])),
                 'description': self.info.get('description', ''),
@@ -229,13 +230,22 @@ class Downloader:
                 ],
             })
 
-        with yt_dlp.YoutubeDL(self.youtubeDL_options) as ydl:
-            ydl.download([self.url])
-            path = ydl.prepare_filename(self.info, outtmpl=path.replace(
-                '%(height)s', str(fmt.get('height'))))
+        self.youtubeDL.params.update(self.youtubeDL_options)
 
+        path = self.youtubeDL.prepare_filename(self.info, outtmpl=outtmpl.replace(
+            '%(height)s', str(fmt.get('height'))))
         base_path = os.path.splitext(path)[0]
         path = os.path.normpath(f"{base_path}.{'mp4' if is_video else 'mp3'}")
+        if os.path.exists(path):
+            return path
+
+        self._info = self.youtubeDL.extract_info(self.url, download=True)
+
+        # with yt_dlp.YoutubeDL(self.youtubeDL_options) as ydl:
+        #     ydl.download([self.url])
+        #     path = ydl.prepare_filename(self.info, outtmpl=outtmpl.replace(
+        #         '%(height)s', str(fmt.get('height'))))
+
         thumbnail_path = download_thumbnail(self.get_thumbnail().get('url', ''),
                                             self.info.get('title', 'thumbnail'))
 

@@ -173,6 +173,19 @@ def safe_name(name: str) -> str:
     return name[:250]  # The rest 5 characters are reserved for file extension
 
 
+def prepare_filename(info: dict, dir_type: str, outtmpl: str) -> str:
+    """
+    Prepare a filename based on the video information and output template.
+    :param info: A dictionary containing video information.
+    :param type: The type of file (e.g., 'video', 'audio').
+    :param outtmpl: The output template for the filename.
+    :return: An absolute path with formatted filename string.
+    """
+    filename = outtmpl % info
+    file_path = os.path.join(paths().get(dir_type), filename)
+    return safe_name(file_path)
+
+
 def paths() -> dict[str, str]:
     """Returns a dictionary of paths for various directories."""
     app_name: str = "Youtube Downloader MAA"
