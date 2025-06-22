@@ -2,7 +2,7 @@ import os
 import platform
 from abc import ABC, abstractmethod
 
-from youtube_downloader.utils import get_referenced_folder
+from downloaders.utils import get_referenced_folder
 
 
 class Downloader(ABC):

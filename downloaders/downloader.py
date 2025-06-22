@@ -3,7 +3,7 @@ from datetime import timedelta
 import os.path
 
 import yt_dlp
-from youtube_downloader.utils import download_thumbnail, get_ffmpeg_path, embed_thumbnail, paths
+from downloaders.utils import download_thumbnail, get_ffmpeg_path, embed_thumbnail, paths
 
 
 def format_duration(seconds: float) -> str:

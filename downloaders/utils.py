@@ -176,8 +176,8 @@ def safe_name(name: str) -> str:
 def prepare_filename(info: dict, dir_type: str, outtmpl: str) -> str:
     """
     Prepare a filename based on the video information and output template.
+    :param dir_type:
     :param info: A dictionary containing video information.
-    :param type: The type of file (e.g., 'video', 'audio').
     :param outtmpl: The output template for the filename.
     :return: An absolute path with formatted filename string.
     """

@@ -3,7 +3,7 @@ import os
 from datetime import timedelta
 import subprocess
 import platform
-from youtube_downloader.downloader import Downloader
+from downloaders.downloader import Downloader
 import threading
 
 app = Flask(__name__)

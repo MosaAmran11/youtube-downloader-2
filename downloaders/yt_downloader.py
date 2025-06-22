@@ -5,8 +5,8 @@ from mutagen.id3 import ID3, APIC, error
 from mutagen.mp3 import MP3
 from yt_dlp import YoutubeDL
 
-from youtube_downloader.utils import CLEAR, RED, RESET, BLUE, BIN
-from youtube_downloader.abc_downloader import Downloader
+from downloaders.utils import CLEAR, RED, RESET, BLUE, BIN
+from downloaders.abc_downloader import Downloader
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 """
