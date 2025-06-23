@@ -8,11 +8,17 @@ from downloaders.utils import download_thumbnail, get_ffmpeg_path, embed_thumbna
 from utils import prepare_filename
 
 
-def format_duration(seconds: float) -> str:
-    duration = timedelta(seconds=seconds)
-    duration = re.sub(r'^0:', '', str(duration))
-    format_list = str(duration).split(':')
-    duration = ':'.join([s.zfill(2) for s in format_list])
+def format_duration(seconds: float | str) -> str:
+    duration = '--:--:--'
+    if isinstance(seconds, float):
+        duration = timedelta(seconds=seconds)
+        duration = re.sub(r'^0:', '', str(duration))
+        format_list = str(duration).split(':')
+        duration = ':'.join([s.zfill(2) for s in format_list])
+    elif isinstance(seconds, str):
+        duration = re.sub(r'^0:', '', seconds)
+        format_list = str(duration).split(':')
+        duration = ':'.join([s.zfill(2) for s in format_list])
     return duration
 
 
@@ -91,7 +97,7 @@ class Downloader:
                         'resolution': f.get('height', 'N/A'),
                         'quality': ('High Quality' if f.get('height', 0) >= 720
                                     else 'Medium Quality' if f.get('height', 0) >= 480
-                                    else 'Low Quality'),
+                        else 'Low Quality'),
                         'ext': f.get('ext', 'N/A'),
                         'filesize': format_size(f.get('filesize', 0)),
                         'vcodec': f.get('vcodec', 'none'),
@@ -104,7 +110,7 @@ class Downloader:
                         'resolution': f.get('height', 'N/A'),
                         'quality': ('High Quality' if f.get('height', 0) >= 720
                                     else 'Medium Quality' if f.get('height', 0) >= 480
-                                    else 'Low Quality'),
+                        else 'Low Quality'),
                         'ext': f.get('ext', 'N/A'),
                         'filesize': 0,
                         'vcodec': f.get('vcodec', 'none'),
@@ -158,7 +164,8 @@ class Downloader:
     def get_video_info(self) -> dict:
         return {
             'title': self.info.get('title', 'Unknown Title'),
-            'duration': self.info.get('duration_string', format_duration(self.info.get('duration', 0))),
+            'duration': format_duration(
+                self.info.get('duration_string', self.info.get('duration', 0))),
             'thumbnail': self.get_thumbnail().get('url', ''),
             'formats': self.get_video_formats(),
             'audio_formats': self.get_audio_formats()
@@ -190,7 +197,7 @@ class Downloader:
                 'merge_output_format': 'mp4',
                 'postprocessor_args': [
                     '-c:v', 'copy',  # Copy video stream without re-encoding
-                    '-c:a', 'aac',   # Convert audio to AAC
+                    '-c:a', 'aac',  # Convert audio to AAC
                     '-b:a', '192k',  # Set audio bitrate to 192k
                 ],
             })
@@ -237,7 +244,7 @@ class Downloader:
             })
 
         self.youtubeDL.params.update(self.youtubeDL_options)
-        fmt.update({'title': self.info.get('title', 'Unknown Title'),})
+        fmt.update({'title': self.info.get('title', 'Unknown Title'), })
 
         path = prepare_filename(fmt, dir_type=fmt_type, outtmpl=outtmpl)
         base_path = os.path.splitext(path)[0]
