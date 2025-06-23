@@ -147,19 +147,19 @@ class Downloader:
         """Get the best thumbnail info for album cover
         :return: A dictionary containing the best thumbnail info."""
         thumbnails = self.info.get('thumbnails', [])
-        if not thumbnails:
-            return {}
-        filtered_thumbnails = [t for t in thumbnails if t.get(
-            'width', 0) == t.get('height', 1)]
-        # We set the default value of `get()` method with different values to break
-        # the condition if the target attributes (`width` and `height`) do not exist.
+        if thumbnails:
+            filtered_thumbnails = [t for t in thumbnails if t.get(
+                'width', 0) == t.get('height', 1)]
+            # We set the default value of `get()` method with different values to break
+            # the condition if the desired attributes (`width` and `height`) do not match.
+    
+            if filtered_thumbnails:
+                # Sort thumbnails by resolution and return the best one
+                return max(filtered_thumbnails, key=lambda t: t.get('height', 0))
 
-        if filtered_thumbnails:
-            # Sort thumbnails by resolution and return the best one
-            return max(filtered_thumbnails, key=lambda t: t.get('height', 0))
-        else:
-            print("No square thumbnails found. Selecting the default thumbnail.")
-            return {'url': self.info.get('thumbnail', '')}
+        # If no square thumbnails found, return the default thumbnail
+        print("No square thumbnails found. Selecting the default thumbnail.")
+        return {'url': self.info.get('thumbnail', '')}
 
     def get_video_info(self) -> dict:
         return {
@@ -253,11 +253,6 @@ class Downloader:
             return path
 
         self._info = self.youtubeDL.extract_info(self.url, download=True)
-
-        # with yt_dlp.YoutubeDL(self.youtubeDL_options) as ydl:
-        #     ydl.download([self.url])
-        #     path = ydl.prepare_filename(self.info, outtmpl=outtmpl.replace(
-        #         '%(height)s', str(fmt.get('height'))))
 
         thumbnail_path = download_thumbnail(self.get_thumbnail().get('url', ''),
                                             self.info.get('title', 'thumbnail'))

@@ -5,7 +5,7 @@ from mutagen.id3 import ID3, APIC, error
 from mutagen.mp3 import MP3
 from yt_dlp import YoutubeDL
 
-from downloaders.utils import CLEAR, RED, RESET, BLUE, BIN
+from downloaders.utils import CLEAR, RED, RESET, BLUE, get_ffmpeg_path
 from downloaders.abc_downloader import Downloader
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -21,7 +21,7 @@ class YoutubeDownloader(Downloader):
             'quiet': True,
             'write_subs': True,
             'outtmpl': '%(title)s.%(ext)s',
-            'ffmpeg_location': BIN,
+            'ffmpeg_location': get_ffmpeg_path(),
             # 'external_downloader': 'ffmpeg',
         }
 
