@@ -13,7 +13,7 @@ def format_duration(seconds: float) -> str:
     duration = re.sub(r'^0:', '', str(duration))
     format_list = str(duration).split(':')
     duration = ':'.join([s.zfill(2) for s in format_list])
-    return str(timedelta(seconds=seconds))
+    return duration
 
 
 def format_size(size_bytes: float) -> str:
