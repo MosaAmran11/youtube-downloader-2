@@ -1,12 +1,18 @@
+import re
 import time
 from datetime import timedelta
 import os.path
 
 import yt_dlp
 from downloaders.utils import download_thumbnail, get_ffmpeg_path, embed_thumbnail, paths
+from utils import prepare_filename
 
 
 def format_duration(seconds: float) -> str:
+    duration = timedelta(seconds=seconds)
+    duration = re.sub(r'^0:', '', str(duration))
+    format_list = str(duration).split(':')
+    duration = ':'.join([s.zfill(2) for s in format_list])
     return str(timedelta(seconds=seconds))
 
 
@@ -152,7 +158,7 @@ class Downloader:
     def get_video_info(self) -> dict:
         return {
             'title': self.info.get('title', 'Unknown Title'),
-            'duration': self.info.get('duration_string', '0:00'),
+            'duration': self.info.get('duration_string', format_duration(self.info.get('duration', 0))),
             'thumbnail': self.get_thumbnail().get('url', ''),
             'formats': self.get_video_formats(),
             'audio_formats': self.get_audio_formats()
@@ -231,9 +237,9 @@ class Downloader:
             })
 
         self.youtubeDL.params.update(self.youtubeDL_options)
+        fmt.update({'title': self.info.get('title', 'Unknown Title'),})
 
-        path = self.youtubeDL.prepare_filename(self.info, outtmpl=outtmpl.replace(
-            '%(height)s', str(fmt.get('height'))))
+        path = prepare_filename(fmt, dir_type=fmt_type, outtmpl=outtmpl)
         base_path = os.path.splitext(path)[0]
         path = os.path.normpath(f"{base_path}.{'mp4' if is_video else 'mp3'}")
         if os.path.exists(path):
