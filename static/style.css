@@ -19,11 +19,34 @@
 .progress {
   height: 25px;
 }
-.video-thumbnail {
-  width: 320px;
-  height: 180px;
-  object-fit: cover;
+.thumbnail-wrapper {
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
   border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Make square thumbnails smaller */
+.thumbnail-wrapper:has(img[style*="aspect-ratio: 1"]) {
+  max-width: 200px;
+}
+
+/* Alternative approach for browsers that don't support :has() */
+.thumbnail-wrapper.square {
+  max-width: 200px;
+}
+
+.video-thumbnail {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  display: block;
 }
 .video-details {
   flex: 1;

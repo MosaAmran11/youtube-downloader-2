@@ -1,6 +1,27 @@
 let currentFilename = "";
 let progressInterval = null;
 
+// Function to detect and adjust square thumbnails
+function adjustThumbnailSize() {
+  const thumbnail = document.querySelector(".video-thumbnail");
+  if (thumbnail) {
+    thumbnail.onload = function () {
+      const wrapper = this.closest(".thumbnail-wrapper");
+      if (this.naturalWidth && this.naturalHeight) {
+        const aspectRatio = this.naturalWidth / this.naturalHeight;
+        // If aspect ratio is close to 1:1 (square), make it smaller
+        if (Math.abs(aspectRatio - 1) < 0.1) {
+          wrapper.classList.add("square");
+        }
+      }
+    };
+    // Trigger onload if image is already loaded
+    if (thumbnail.complete) {
+      thumbnail.onload();
+    }
+  }
+}
+
 function formatSize(bytes) {
   if (bytes === 0) return "0B";
   const units = ["B", "KB", "MB", "GB"];
@@ -103,3 +124,6 @@ document.getElementById("openFileBtn").addEventListener("click", function () {
     .then((response) => response.json())
     .catch((error) => console.error("Error:", error));
 });
+
+// Adjust thumbnail size when page loads
+document.addEventListener("DOMContentLoaded", adjustThumbnailSize);
