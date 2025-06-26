@@ -8,17 +8,13 @@ from downloaders.utils import download_thumbnail, get_ffmpeg_path, embed_thumbna
 from utils import prepare_filename
 
 
-def format_duration(seconds: float | str) -> str:
-    duration = '--:--:--'
-    if isinstance(seconds, float):
-        duration = timedelta(seconds=seconds)
-        duration = re.sub(r'^0:', '', str(duration))
-        format_list = str(duration).split(':')
-        duration = ':'.join([s.zfill(2) for s in format_list])
-    elif isinstance(seconds, str):
-        duration = re.sub(r'^0:', '', seconds)
-        format_list = str(duration).split(':')
-        duration = ':'.join([s.zfill(2) for s in format_list])
+def format_duration(seconds: int | float | str) -> str:
+    temp = '--:--:--'
+    if not isinstance(seconds, str):
+        temp = timedelta(seconds=float(seconds))
+    temp = re.sub(r'^0:', '', seconds)
+    format_list = str(temp).split(':')
+    duration = ':'.join([s.zfill(2) for s in format_list])
     return duration
 
 
