@@ -1,0 +1,40 @@
+<!-- Video Card Component -->
+<div class="video-card">
+  <div class="video-header">
+    <div class="thumbnail-wrapper">
+      <img
+        src="{{ video_info.thumbnail }}"
+        alt="{{ video_info.title }}"
+        class="video-thumbnail"
+        onerror="this.src='{{ url_for('static', filename='images/placeholder-thumbnail.jpg') }}'"
+      />
+    </div>
+    <div class="video-details">
+      <h3 class="video-title">{{ video_info.title }}</h3>
+      <div class="video-meta">
+        <span class="video-duration">
+          <i class="fas fa-clock"></i>
+          {{ video_info.duration }}
+        </span>
+        <span class="video-quality">
+          <i class="fas fa-video"></i>
+          Multiple formats available
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="video-actions">
+    <button
+      class="btn btn-primary"
+      onclick="copyToClipboard('{{ video_info.title }}')"
+    >
+      <i class="fas fa-copy"></i>
+      Copy Title
+    </button>
+    <button class="btn btn-outline-secondary" onclick="shareVideo()">
+      <i class="fas fa-share"></i>
+      Share
+    </button>
+  </div>
+</div>

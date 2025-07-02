@@ -1,0 +1,16 @@
+<!-- Snackbar Component Template -->
+<div class="snackbar" id="snackbar-{{ id }}" data-snackbar-id="{{ id }}">
+  <div class="snackbar-content">
+    <div class="snackbar-icon">
+      <i class="fas fa-{{ icon }}"></i>
+    </div>
+    <div class="snackbar-message">
+      <span class="snackbar-title">{{ title }}</span>
+      <span class="snackbar-text">{{ message }}</span>
+    </div>
+    <button class="snackbar-close" onclick="closeSnackbar('{{ id }}')">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  <div class="snackbar-progress"></div>
+</div>

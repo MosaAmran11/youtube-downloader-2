@@ -1,0 +1,42 @@
+<!-- Title Bar Component -->
+<header class="title-bar">
+  <div class="container">
+    <div class="title-bar-content">
+      <!-- Logo and Brand -->
+      <div class="brand">
+        <i class="fas fa-download brand-icon"></i>
+        <h1 class="brand-title">YouTube Downloader</h1>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="nav-menu">
+        <a href="{{ url_for('main.index') }}" class="nav-link active">
+          <i class="fas fa-home"></i>
+          <span>Home</span>
+        </a>
+        <a
+          href="#"
+          class="nav-link"
+          onclick="showSnackbar('Settings coming soon!', 'info')"
+        >
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </a>
+        <a
+          href="#"
+          class="nav-link"
+          onclick="showSnackbar('Help documentation coming soon!', 'info')"
+        >
+          <i class="fas fa-question-circle"></i>
+          <span>Help</span>
+        </a>
+      </nav>
+
+      <!-- Status Indicator -->
+      <div class="status-indicator">
+        <div class="status-dot" id="status-dot"></div>
+        <span class="status-text" id="status-text">Ready</span>
+      </div>
+    </div>
+  </div>
+</header>

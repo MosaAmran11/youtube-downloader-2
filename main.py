@@ -1,154 +1,89 @@
-from flask import Flask, render_template, request, send_file, jsonify
+#!/usr/bin/env python3
+"""
+YouTube Downloader - Main Entry Point
+A cross-platform YouTube video/audio downloader with web interface
+"""
+
 import os
-from datetime import timedelta
-import subprocess
-import platform
-from downloaders.downloader import Downloader
-import threading
-
-app = Flask(__name__)
-
-# Global variable to store downloader instance
-# Downloader instance with empty URL. (Instead of `None` to avoid NoneType errors)
-current_downloader = Downloader('')
-thread = None
+import sys
+import socket
+from app import create_app
+from downloaders.utils.file_utils import ensure_directories_exist
+from downloaders.utils.ffmpeg_utils import ensure_ffmpeg_available, verify_ffmpeg_installation
 
 
-def format_duration(seconds):
-    return str(timedelta(seconds=seconds))
+def find_available_port(start_port: int = 5000, max_attempts: int = 10) -> int | None:
+    """Find an available port starting from start_port"""
+    for port in range(start_port, start_port + max_attempts):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('127.0.0.1', port))
+                return port
+        except OSError:
+            continue
+    return None
 
 
-def format_size(size_bytes):
-    """Convert size in bytes to human-readable format"""
-    for unit in ['B', 'KB', 'MB', 'GB']:
-        if size_bytes < 1024.0:
-            return f"{size_bytes:.1f}{unit}"
-        size_bytes /= 1024.0
-    return f"{size_bytes:.1f}GB"
+def main():
+    """Main application entry point"""
+    print("Starting YouTube Downloader...")
 
+    # Ensure required directories exist
+    ensure_directories_exist()
 
-def open_file_location(filepath):
-    """Open file location in file explorer"""
-    if platform.system() == "Windows":
-        os.system(f'explorer /select,"{os.path.normpath(filepath)}"')
-    elif platform.system() == "Darwin":  # macOS
-        os.system(f'open "{os.path.dirname(filepath)}"')
-    else:  # Linux
-        os.system(f'xdg-open "{os.path.dirname(filepath)}"')
+    # Check and setup FFmpeg
+    print("Checking FFmpeg availability...")
+    if not ensure_ffmpeg_available():
+        print("Warning: FFmpeg setup failed. Some features may not work properly.")
+        print("You can manually install FFmpeg and add it to your PATH.")
+    else:
+        # Verify the installation
+        if verify_ffmpeg_installation():
+            print("✅ FFmpeg is ready to use!")
+        else:
+            print(
+                "⚠️  FFmpeg installed but verification failed. You may need to restart your terminal.")
 
+    # Create and run Flask app
+    app = create_app()
 
-def open_file(filepath):
-    """Open file with default application"""
-    if platform.system() == "Windows":
-        os.startfile(filepath)
-    elif platform.system() == "Darwin":  # macOS
-        subprocess.run(["open", filepath])
-    else:  # Linux
-        subprocess.run(["xdg-open", filepath])
+    # Get configuration
+    debug = app.config.get('DEBUG', True)
+    host = os.environ.get('FLASK_HOST', '127.0.0.1')
+    preferred_port = int(os.environ.get('FLASK_PORT', 5000))
 
+    # Find available port
+    port = find_available_port(preferred_port)
+    if port is None:
+        print(
+            f"❌ No available ports found in range {preferred_port}-{preferred_port + 9}")
+        print("Please close other applications or specify a different port with FLASK_PORT environment variable")
+        sys.exit(1)
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    global current_downloader
-    url = request.form.get('url') or ''
-    video_info = None
-    error = None
+    # if port != preferred_port:
+    #     print(
+    #         f"⚠️  Port {preferred_port} is in use, using port {port} instead")
 
-    if request.method == 'POST':
-        url = request.form.get('url')
-        if url:
-            try:
-                current_downloader = Downloader(url)
-                video_info = current_downloader.get_video_info()
-            except Exception as e:
-                error = "Could not fetch video information. Please check the URL and try again."
-
-    return render_template('index.html', url=url, video_info=video_info, error=error)
-
-
-@app.route('/download', methods=['POST'])
-def download():
-    global current_downloader
-    if not current_downloader.url:
-        return jsonify({'error': 'No video selected'}), 400
-
-    format_id = request.form.get('format')
-    format_obj = None
+    # print(f"\n🚀 Server starting on http://{host}:{port}")
+    # print("Press Ctrl+C to stop the server")
 
     try:
-        # Get the format object from the available formats
-        if format_id:
-            format_obj = next((f for f in current_downloader.info.get('formats', [])
-                               if f['format_id'] == format_id), None)
-        if not format_obj:
-            return jsonify({'error': 'Selected format not found'}), 400
-
-        # Start download in a background thread
-        def download_thread():
-            try:
-                file_path = current_downloader.download(format_obj)
-                if os.path.exists(file_path):
-                    current_downloader.progress_hook.progress['status'] = 'finished'
-                    current_downloader.progress_hook.progress['filename'] = file_path
-                else:
-                    current_downloader.progress_hook.progress['status'] = 'error'
-                    current_downloader.progress_hook.progress['error'] = 'File not found'
-            except Exception as e:
-                current_downloader.progress_hook.progress['status'] = 'error'
-                current_downloader.progress_hook.progress['error'] = str(e)
-
-        # Reset progress
-        current_downloader.progress_hook.progress = {
-            'status': 'downloading',
-            'percentage': '0%',
-            'downloaded_bytes': 0,
-            'total_bytes': 0,
-            'speed': 0,
-            'filename': ''
-        }
-
-        # Start the download thread
-        global thread
-        thread = threading.Thread(target=download_thread)
-        thread.daemon = True
-        thread.start()
-
-        return jsonify({'status': 'started'})
-
+        app.run(host=host, port=port, debug=debug)
+    except OSError as e:
+        if "permission" in str(e).lower() or "access" in str(e).lower():
+            print(f"❌ Permission error: {e}")
+            print("Try running with administrator privileges or use a different port")
+            print(
+                "You can set a different port with: set FLASK_PORT=8080 && python main.py")
+        else:
+            print(f"❌ Error starting server: {e}")
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("\n👋 Server stopped by user")
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/progress')
-def get_progress():
-    if current_downloader and hasattr(current_downloader, 'progress_hook'):
-        if thread and thread.is_alive():
-            current_downloader.progress_hook.progress['status'] = 'downloading'
-        return jsonify(current_downloader.progress_hook.progress)
-    return jsonify({'status': 'not_started'})
-
-
-@app.route('/open_location/<path:filename>')
-def open_location(filename):
-    try:
-        # Convert URL-encoded path to absolute path
-        abs_path = os.path.abspath(filename)
-        open_file_location(abs_path)
-        return jsonify({'status': 'success'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/open_file/<path:filename>')
-def open_file_route(filename):
-    try:
-        # Convert URL-encoded path to absolute path
-        abs_path = os.path.abspath(filename)
-        open_file(abs_path)
-        return jsonify({'status': 'success'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"❌ Error starting server: {e}")
+        sys.exit(1)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    main()

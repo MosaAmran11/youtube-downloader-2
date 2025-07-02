@@ -1,0 +1,58 @@
+<!-- Download Form Component -->
+<div class="download-form">
+  <h4 class="form-title">
+    <i class="fas fa-download"></i>
+    Download Options
+  </h4>
+
+  <form method="POST" action="{{ url_for('api.download') }}" id="downloadForm">
+    <input type="hidden" name="url" value="{{ url }}" />
+
+    <div class="form-group">
+      <label class="form-label">
+        <i class="fas fa-list"></i>
+        Available Formats:
+      </label>
+      <select class="form-select" name="format" required>
+        <option value="">Select a format...</option>
+
+        <!-- Video Formats -->
+        <optgroup label="Video Formats">
+          {% for format in video_info.formats %}
+          <option value="{{ format.format_id }}" data-type="video">
+            <i class="fas fa-video"></i>
+            {{ format.resolution }}p ({{ format.quality }}) {% if
+            format.filesize %}- {{ format.filesize }}{% endif %}
+          </option>
+          {% endfor %}
+        </optgroup>
+
+        <!-- Audio Formats -->
+        <optgroup label="Audio Formats">
+          {% for format in video_info.audio_formats %}
+          <option value="{{ format.format_id }}" data-type="audio">
+            <i class="fas fa-music"></i>
+            {{ format.quality }} {% if format.filesize %}- {{ format.filesize
+            }}{% endif %}
+          </option>
+          {% endfor %}
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-success btn-lg" id="downloadBtn">
+        <i class="fas fa-download"></i>
+        Download
+      </button>
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        onclick="showFormatInfo()"
+      >
+        <i class="fas fa-info-circle"></i>
+        Format Info
+      </button>
+    </div>
+  </form>
+</div>

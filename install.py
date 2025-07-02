@@ -1,6 +1,5 @@
 import platform
 import subprocess
-import sys
 
 
 def install_requirements():

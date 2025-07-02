@@ -1,0 +1,183 @@
+{% extends "base.html" %} {% block title %}YouTube Downloader - Home{% endblock
+%} {% block content %}
+<!-- URL Input Section -->
+<section class="url-input-section">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="url-input-card">
+        <h2 class="section-title">
+          <i class="fas fa-link"></i>
+          Enter YouTube URL
+        </h2>
+
+        <form method="POST" action="{{ url_for('main.index') }}" id="urlForm">
+          <div class="input-group input-group-lg">
+            <input
+              type="url"
+              class="form-control"
+              name="url"
+              value="{{ url }}"
+              placeholder="https://www.youtube.com/watch?v=..."
+              required
+            />
+            <button class="btn btn-primary" type="submit">
+              <i class="fas fa-search"></i>
+              Get Info
+            </button>
+          </div>
+        </form>
+
+        <div class="url-examples">
+          <small class="text-muted">
+            <i class="fas fa-info-circle"></i>
+            Supported: YouTube videos, shorts, and live streams
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Error Display -->
+{% if error %}
+<section class="error-section">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ error }}
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Video Information Section -->
+{% if video_info %}
+<section class="video-info-section">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <!-- Video Card -->
+      {% include 'components/video_card.html' %}
+
+      <!-- Download Form -->
+      {% include 'components/download_form.html' %}
+
+      <!-- Progress Section -->
+      <div class="progress-section" id="progressSection" style="display: none">
+        <h4 class="section-title">
+          <i class="fas fa-tasks"></i>
+          Download Progress
+        </h4>
+
+        <div class="progress-card">
+          <div class="progress mb-3">
+            <div
+              class="progress-bar progress-bar-striped progress-bar-animated"
+              role="progressbar"
+              style="width: 0%"
+              id="progressBar"
+            >
+              0%
+            </div>
+          </div>
+
+          <div class="progress-details">
+            <div class="row">
+              <div class="col-md-6">
+                <span class="progress-label">
+                  <i class="fas fa-download"></i>
+                  Downloaded:
+                </span>
+                <span id="downloadSize">-- / --</span>
+              </div>
+              <div class="col-md-6">
+                <span class="progress-label">
+                  <i class="fas fa-tachometer-alt"></i>
+                  Speed:
+                </span>
+                <span id="downloadSpeed">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- File Actions Section -->
+      <div
+        class="file-actions-section"
+        id="fileActionsSection"
+        style="display: none"
+      >
+        <h4 class="section-title">
+          <i class="fas fa-check-circle text-success"></i>
+          Download Complete!
+        </h4>
+
+        <div class="file-actions-card">
+          <div class="row">
+            <div class="col-md-6">
+              <button class="btn btn-primary btn-lg w-100" id="openLocationBtn">
+                <i class="fas fa-folder-open"></i>
+                Open File Location
+              </button>
+            </div>
+            <div class="col-md-6">
+              <button class="btn btn-success btn-lg w-100" id="openFileBtn">
+                <i class="fas fa-play"></i>
+                Open File
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Features Section -->
+{% if not video_info %}
+<section class="features-section">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <h2 class="section-title text-center">
+        <i class="fas fa-star"></i>
+        Features
+      </h2>
+
+      <div class="row">
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-video"></i>
+            </div>
+            <h5>Multiple Formats</h5>
+            <p>Download videos in various resolutions and audio formats</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-tachometer-alt"></i>
+            </div>
+            <h5>Fast Downloads</h5>
+            <p>Optimized downloading with progress tracking</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <h5>Safe & Secure</h5>
+            <p>No ads, no malware, just clean downloads</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %} {% endblock %} {% block extra_js %}
+<script src="{{ url_for('static', filename='js/download.js') }}"></script>
+{% endblock %}

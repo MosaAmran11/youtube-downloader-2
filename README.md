@@ -1,131 +1,179 @@
 # YouTube Downloader
 
-A cross-platform YouTube video/audio downloader with a web-based GUI, powered by Flask and yt-dlp.
+A modern, cross-platform YouTube video/audio downloader with a beautiful web-based GUI, built with Flask and yt-dlp.
 
-## ⚠️ Disclaim
+## ⚠️ Disclaimer
 
 This tool is intended for personal and educational use only.
 Downloading copyrighted content without permission is against [YouTube's Terms of Service](https://www.youtube.com/static?template=terms).
 The author is not responsible for any misuse of this tool.
 
-## Features
+## ✨ Features
 
-- Download YouTube videos and audio in various formats and qualities (Not support Playlists yet)
-- Simple web interface for entering URLs and selecting formats
-- Progress bar and download status updates
-- Automatic FFmpeg setup (Windows/Linux)
-- Open downloaded files or their location directly from the UI
-- Metadata and thumbnail embedding for audio downloads
+- **Modern Web Interface**: Clean, responsive design with Bootstrap 5 and modular components
+- **Multiple Format Support**: Download videos and audio in various qualities
+- **Real-time Progress**: Live download progress with speed and size information
+- **Smart Thumbnail Display**: Responsive thumbnails that adapt to aspect ratios
+- **Cross-platform**: Works on Windows, macOS, and Linux
+- **Automatic FFmpeg Setup**: Downloads and configures FFmpeg automatically
+- **File Management**: Open downloaded files or their locations directly from the UI
+- **Modular Architecture**: Clean, maintainable code structure
+- **Interactive Notifications**: Toast messages and snackbar notifications
+- **Keyboard Shortcuts**: Quick access to common functions
+- **Status Indicators**: Real-time system status and connection monitoring
 
-## Installation
+## 🏗️ Project Structure
 
-### 🪟 Windows Setup
+```
+youtube_downloader/
+├── app/                          # Flask application
+│   ├── __init__.py              # App factory
+│   ├── config.py                # Configuration settings
+│   ├── routes/                  # Route handlers
+│   │   ├── main.py             # Main page routes
+│   │   └── api.py              # API endpoints
+│   ├── services/               # Business logic
+│   │   ├── download_service.py # Download management
+│   │   └── file_service.py     # File operations
+│   └── utils/                  # Application utilities
+│       ├── formatters.py       # Data formatting
+│       └── validators.py       # Input validation
+├── core/                       # Core functionality
+│   ├── downloaders/           # Downloader implementations
+│   │   ├── base.py           # Abstract base class
+│   │   ├── youtube.py        # YouTube downloader
+│   │   └── progress.py       # Progress tracking
+│   └── utils/                # Core utilities
+│       ├── file_utils.py     # File operations
+│       ├── ffmpeg_utils.py   # FFmpeg management
+│       └── platform_utils.py # Platform-specific code
+├── static/                    # Static assets
+│   ├── css/                  # Stylesheets
+│   └── js/                   # JavaScript files
+├── templates/                 # HTML templates
+├── tests/                    # Test suite
+├── main.py                   # Application entry point
+├── requirements.txt          # Python dependencies
+└── README.md                # This file
+```
 
-1. Clone the repository:
+## 🚀 Installation
+
+### Prerequisites
+
+- Python 3.8 or higher
+- pip (Python package installer)
+
+### Quick Start
+
+1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/MosaAmran11/youtube-downloader-2.git
-   cd youtube-downloader-2
+   git clone https://github.com/yourusername/youtube-downloader.git
+   cd youtube-downloader
    ```
 
-   If you do not have Git installed, Download the repository from [Here](https://github.com/MosaAmran11/youtube-downloader-2/archive/refs/heads/main.zip). Then, extract the files and enter to `youtube-downloader-2-main` directory.
-
-2. Run the installer:
+2. **Create a virtual environment:**
 
    ```bash
-   python install.py
+   python -m venv venv
    ```
 
-### 🐧 Linux Setup
+3. **Activate the virtual environment:**
 
-1. Clone the repository:
+   - **Windows:**
+     ```cmd
+     venv\Scripts\activate
+     ```
+   - **macOS/Linux:**
+     ```bash
+     source venv/bin/activate
+     ```
+
+4. **Install dependencies:**
 
    ```bash
-   git clone https://github.com/MosaAmran11/youtube-downloader-2.git
-   cd youtube-downloader-2
+   pip install -r requirements.txt
    ```
 
-2. Run the installer:
-
-   You can simply run `install.py` file to install all requirements automatically, OR run the following commands to install manually:
+5. **Install FFmpeg (Optional - will be done automatically):**
 
    ```bash
-   sudo apt update
-   sudo apt install python3-pip python3-venv
-   python3 -m venv venv
-   source ./venv/bin/activate
-   python3 -m pip install -r requirements.txt
+   python scripts/install_ffmpeg.py
    ```
 
-## Usage
+6. **Run the application:**
 
-1. Start the server:
-
-   ***1. On Windows***
-
-   ```cmd
+   ```bash
    python main.py
    ```
 
-   ***2. On Linux***
+7. **Open your browser and go to:** [http://localhost:5000](http://localhost:5000)
 
-   ```bash
-   source venv/bin/activate
-   python3 main.py
-   ```
+### FFmpeg Installation
 
-2. Open your browser and go to [http://localhost:5000](http://localhost:5000)
-3. Paste a YouTube URL, get info, and choose your download format.
+The application will automatically download and install FFmpeg if it's not found on your system. FFmpeg will be installed to:
 
-## Project Structure
+- **Windows**: `C:\Program Files\FFmpeg\`
+- **macOS**: `~/bin/`
+- **Linux**: `~/bin/`
 
-- `main.py` — Flask web server and main entry point
-- `youtube_downloader/` — Core downloader logic and utilities
-- `static/` — Frontend JS and CSS
-- `templates/` — HTML templates
-- `scripts/` — Helper scripts for setup and requirements
-- `tests/` — Unit and integration tests
+The installation process will:
 
-## Requirements
+1. Download the appropriate FFmpeg build for your platform
+2. Install it to the system directory
+3. Add it to your PATH environment variable
+4. Verify the installation
 
-See [requirements.txt](requirements.txt). Main dependencies:
+**Note**: On Unix systems (macOS/Linux), you may need to restart your terminal or run `source ~/.bashrc` for the PATH changes to take effect.
 
-- Flask
-- yt-dlp
-- requests
-- mutagen
+### Manual FFmpeg Installation
 
-## Notes
+If automatic installation fails, you can install FFmpeg manually:
 
-- **FFmpeg** is required for format conversion and metadata embedding. The installer will attempt to set it up automatically.
-- Downloaded files are saved in your system's Downloads folder under `Youtube Downloader MAA`.
+- **Windows**: Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html)
+- **macOS**: `brew install ffmpeg`
+- **Linux**: `sudo apt install ffmpeg` (Ubuntu/Debian) or `sudo yum install ffmpeg` (CentOS/RHEL)
 
-## License
+## 📖 Usage
 
-MIT License
+1. **Enter a YouTube URL** in the input field
+2. **Click "Get Info"** to fetch video information
+3. **Select your preferred format** from the available options
+4. **Click "Download"** to start the download
+5. **Monitor progress** in real-time
+6. **Open the file** or its location when complete
 
-```text
-Copyright (c) 2025 Mosa Amran Alawadhi
+## 🎨 Web Interface Features
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+### **Modular Components**
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+- **Title Bar**: Navigation, branding, and status indicators
+- **Snackbar Notifications**: Toast messages for user feedback
+- **Video Cards**: Responsive display of video information
+- **Download Forms**: Format selection and download controls
+- **Progress Tracking**: Real-time download progress with speed and size
+- **File Actions**: Open files or their locations after download
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+### **Interactive Features**
 
----
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Smart Thumbnails**: Automatically adjusts size based on aspect ratio
+- **Keyboard Shortcuts**: Quick access to common functions
+- **Status Indicators**: Real-time system and connection status
+- **Loading States**: Visual feedback during operations
+- **Error Handling**: Graceful error messages and recovery
 
-_For issues or contributions, please open an issue or pull request on GitHub._
+### **User Experience**
+
+- **Modern UI**: Clean, professional design with smooth animations
+- **Accessibility**: Keyboard navigation and screen reader support
+- **Performance**: Optimized loading and smooth interactions
+- **Cross-browser**: Works on Chrome, Firefox, Safari, and Edge
+
+## 🔧 Configuration
+
+The application can be configured through environment variables:
+
+- `FLASK_DEBUG`: Set to `True` for development mode (default: `True`)
+- `FLASK_HOST`: Server host (default: `127.0.0.1`)

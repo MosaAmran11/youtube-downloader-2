@@ -1,10 +1,8 @@
 import os
 import platform
 import subprocess
-import sys
 import urllib.request
 import zipfile
-import tarfile
 import shutil
 from pathlib import Path
 

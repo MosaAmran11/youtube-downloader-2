@@ -1,3 +1,16 @@
 {
-  "cSpell.words": ["outtmpl", "vcodec"]
+  "cSpell.words": [
+    "acodec",
+    "bestaudio",
+    "bestvideo",
+    "downloaders",
+    "kbps",
+    "outtmpl",
+    "postprocessors",
+    "preferedformat",
+    "preferredcodec",
+    "preferredquality",
+    "vcodec",
+    "writethumbnail"
+  ]
 }
