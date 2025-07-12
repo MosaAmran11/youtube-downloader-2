@@ -6,7 +6,7 @@ from typing import Dict
 from downloaders.utils import raise_on_error
 
 
-def downloader_paths() -> Dict[str, str]:
+def get_downloader_paths() -> Dict[str, str]:
     """Get download paths for different file types"""
     base_path = get_base_download_path()
 
@@ -47,7 +47,7 @@ def get_windows_downloads_path() -> str:
 
 def ensure_directories_exist():
     """Create necessary directories if they don't exist"""
-    paths = downloader_paths()
+    paths = get_downloader_paths()
     for path in paths.values():
         os.makedirs(path, exist_ok=True)
 
@@ -76,12 +76,12 @@ def safe_name(name: str, max_length: int = 255) -> str:
     Sanitize a string to be safe for use as a filename on most file systems.
     Removes or replaces characters not allowed in file names.
     """
-    # Remove or replace invalid characters (Windows, macOS, Linux)
-    # Invalid: \ / : * ? " < > | and control chars
     if not isinstance(name, str):
         raise ValueError("name must be a string")
     if not max_length or not isinstance(max_length, int) or max_length <= 0:
         raise ValueError("max_length must be a positive integer")
+    # Remove or replace invalid characters (Windows, macOS, Linux)
+    # Invalid: \ / : * ? " < > | and control chars
     name = re.sub(r'[\\/:*?"<>|\r\n\t]', '_', name)
     # Remove leading/trailing whitespace and dots
     name = name.strip().strip('.')
@@ -102,7 +102,7 @@ def prepare_output_template(format_obj: dict, is_video: bool = True) -> str:
     if not isinstance(is_video, bool):
         raise ValueError("is_video must be a boolean value")
     filetype = 'video' if is_video else 'audio'
-    abs_path = downloader_paths()[filetype]
+    abs_path = get_downloader_paths()[filetype]
     if is_video:
         return os.path.join(abs_path, f'{format_obj['title']} ({format_obj['height']}p).{format_obj["ext"]}')
     else:

@@ -1,10 +1,12 @@
 import os
+import time
 import yt_dlp
 from typing import Dict, List
 from downloaders.base import BaseDownloader
 from downloaders.utils import raise_on_error
 from downloaders.utils.ffmpeg_utils import get_ffmpeg_path
-from downloaders.utils.file_utils import downloader_paths, prepare_output_template
+from downloaders.utils.file_utils import get_downloader_paths, prepare_output_template
+from downloaders.utils.thumbnail_utils import embed_thumbnail, download_thumbnail
 from app.utils.formatters import format_duration, format_size
 
 
@@ -19,8 +21,8 @@ class YouTubeDownloader(BaseDownloader):
         """Setup yt-dlp options"""
         self.youtube_dl_options = {
             'paths': {
-                'temp': downloader_paths()['temp'],
-                'thumbnail': downloader_paths()['thumbnail']
+                'temp': get_downloader_paths()['temp'],
+                'thumbnail': get_downloader_paths()['thumbnail']
             },
             'ffmpeg_location': get_ffmpeg_path(),
             'progress_hooks': [self.progress_hook],
@@ -186,6 +188,16 @@ class YouTubeDownloader(BaseDownloader):
         final_path = os.path.splitext(
             outtmpl)[0] + ('.mp4' if is_video else '.mp3')
         self.progress_hook.progress['filename'] = final_path
+
+        # Download and embed thumbnail if available
+        thumbnail = download_thumbnail(
+            self.get_thumbnail().get('url', ''), self.info.get('title', 'thumbnail'))
+        
+        embed_thumbnail(final_path, thumbnail)
+
+        # Update the file's modification time to the current time
+        current_time = time.time()
+        os.utime(final_path, (current_time, current_time))
 
         # Return the downloaded file path
         return final_path
