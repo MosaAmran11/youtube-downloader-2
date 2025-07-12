@@ -143,13 +143,39 @@ class YouTubeDownloader(BaseDownloader):
                 ],
             })
         else:
+            # Get metadata from the video info
+            metadata = {
+                'title': self.info.get('title', 'Unknown Title'),
+                'artist': ', '.join(
+                    self.info.get('artists', []) or
+                    self.info.get('uploader', 'Unknown Artist')
+                ),
+                'album': self.info.get('album', None) or self.info.get('title', 'Unknown Album'),
+                'date': str(self.info.get('release_year', None) or self.info.get('upload_date', '')[:4]),
+            }
+
             download_options.update({
                 'format': format_obj.get('format_id', 'bestaudio'),
-                'postprocessors': [{
-                    'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
-                    'preferredquality': '192',
-                }],
+
+                'postprocessors': [
+                    {
+                        'key': 'FFmpegExtractAudio',
+                        'preferredcodec': 'mp3',
+                        'preferredquality': str(format_obj.get('abr', 192)),
+                    },
+                    {
+                        'key': 'FFmpegMetadata',  # Add metadata
+                        'add_metadata': True,
+                    },
+                ],
+
+                'postprocessor_args': [
+                    '-metadata', f'title={metadata["title"]}',
+                    '-metadata', f'artist={metadata["artist"]}',
+                    '-metadata', f'album={metadata["album"]}',
+                    '-metadata', f'date={metadata["date"]}',
+                    '-metadata', f'comment=""',  # Avoid adding URL as a comment
+                ],
             })
 
         # Reset progress and download
@@ -163,12 +189,3 @@ class YouTubeDownloader(BaseDownloader):
 
         # Return the downloaded file path
         return final_path
-
-    def _get_quality_label(self, height: int) -> str:
-        """Get quality label based on video height"""
-        if height >= 720:
-            return 'High Quality'
-        elif height >= 480:
-            return 'Medium Quality'
-        else:
-            return 'Low Quality'
