@@ -115,9 +115,6 @@ class YouTubeDownloader(BaseDownloader):
     def download(self, format_obj: Dict) -> str:
         """Download the video/audio with specified format"""
         is_video = format_obj.get('vcodec') != 'none'
-        # format_obj.update({
-        #     'title': self.info.get('title', 'Unknown Title'),
-        # })
 
         # Setup output template
         outtmpl = prepare_output_template(
@@ -182,11 +179,6 @@ class YouTubeDownloader(BaseDownloader):
 
         final_path = os.path.splitext(
             outtmpl)[0] + ('.mp4' if is_video else '.mp3')
-
-        # if os.path.exists(final_path):
-        #     self.progress_hook.progress['status'] = 'finished'
-        #     self.progress_hook.progress['filename'] = final_path
-        #     return final_path
 
         # Reset progress and download
         self.progress_hook.reset()

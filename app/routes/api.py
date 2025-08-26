@@ -1,10 +1,8 @@
 from flask import Blueprint, request, jsonify
 from app.routes import download_service
 from app.services.file_service import FileService
-# from app.services.download_service import DownloadService
 
 api_bp = Blueprint('api', __name__)
-# download_service = DownloadService()
 file_service = FileService()
 
 

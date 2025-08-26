@@ -101,10 +101,3 @@ class DownloadService:
                 return fmt
 
         return None
-
-    # def is_downloading(self) -> bool:
-    #     """Check if a download is currently in progress"""
-    #     return (self.download_thread_obj and
-    #             self.download_thread_obj.is_alive() and
-    #             self.current_downloader and
-    #             self.current_downloader.progress_hook.progress['status'] == 'downloading')
