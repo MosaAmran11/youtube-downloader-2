@@ -115,9 +115,9 @@ class YouTubeDownloader(BaseDownloader):
     def download(self, format_obj: Dict) -> str:
         """Download the video/audio with specified format"""
         is_video = format_obj.get('vcodec') != 'none'
-        format_obj.update({
-            'title': self.info.get('title', 'Unknown Title'),
-        })
+        # format_obj.update({
+        #     'title': self.info.get('title', 'Unknown Title'),
+        # })
 
         # Setup output template
         outtmpl = prepare_output_template(
@@ -180,19 +180,23 @@ class YouTubeDownloader(BaseDownloader):
                 ],
             })
 
+        final_path = os.path.splitext(
+            outtmpl)[0] + ('.mp4' if is_video else '.mp3')
+
+        # if os.path.exists(final_path):
+        #     self.progress_hook.progress['status'] = 'finished'
+        #     self.progress_hook.progress['filename'] = final_path
+        #     return final_path
+
         # Reset progress and download
         self.progress_hook.reset()
         with yt_dlp.YoutubeDL(download_options) as ydl:
             ydl.download([self.url])
 
-        final_path = os.path.splitext(
-            outtmpl)[0] + ('.mp4' if is_video else '.mp3')
-        self.progress_hook.progress['filename'] = final_path
-
         # Download and embed thumbnail if available
         thumbnail = download_thumbnail(
             self.get_thumbnail().get('url', ''), self.info.get('title', 'thumbnail'))
-        
+
         embed_thumbnail(final_path, thumbnail)
 
         # Update the file's modification time to the current time

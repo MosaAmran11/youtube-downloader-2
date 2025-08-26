@@ -56,7 +56,6 @@ function handleDownload(e) {
       if (data.status === "started") {
         // Start progress updates
         progressInterval = setInterval(updateProgress, 500);
-        showSnackbar("Download started successfully", "success");
       } else {
         throw new Error(data.error || "Download failed to start");
       }
@@ -84,6 +83,7 @@ function updateProgress() {
       console.log("Progress data:", data);
 
       if (data.status === "downloading") {
+        hideLoading();
         const progressBar = document.getElementById("progressBar");
         const downloadSize = document.getElementById("downloadSize");
         const downloadSpeed = document.getElementById("downloadSpeed");
@@ -101,7 +101,8 @@ function updateProgress() {
 
         // Update status
         updateStatus("downloading", `Downloading... ${data.percentage}`);
-      } else if (data.status === "finished") {
+      } else if (data.status === "done") {
+        hideLoading();
         clearInterval(progressInterval);
         currentFilename = data.filename;
 
@@ -141,9 +142,7 @@ function handleOpenLocation() {
   fetch(`/api/open_location/${encodeURIComponent(currentFilename)}`)
     .then((response) => response.json())
     .then((data) => {
-      if (data.status === "success") {
-        showSnackbar("File location opened", "success");
-      } else {
+      if (data.status === "error") {
         showSnackbar(data.error || "Failed to open file location", "error");
       }
     })
@@ -162,9 +161,7 @@ function handleOpenFile() {
   fetch(`/api/open_file/${encodeURIComponent(currentFilename)}`)
     .then((response) => response.json())
     .then((data) => {
-      if (data.status === "success") {
-        showSnackbar("File opened successfully", "success");
-      } else {
+      if (data.status === "error") {
         showSnackbar(data.error || "Failed to open file", "error");
       }
     })
@@ -208,12 +205,12 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // Auto-refresh progress when tab becomes visible
-document.addEventListener("visibilitychange", function () {
-  if (!document.hidden && progressInterval) {
-    // Refresh progress immediately when tab becomes visible
-    updateProgress();
-  }
-});
+// document.addEventListener("visibilitychange", function () {
+//   if (!document.hidden && progressInterval) {
+//     // Refresh progress immediately when tab becomes visible
+//     updateProgress();
+//   }
+// });
 
 // Cleanup on page unload
 window.addEventListener("beforeunload", function () {

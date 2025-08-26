@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, request
-from app.services.download_service import DownloadService
+from app.routes import download_service
+# from app.services.download_service import DownloadService
 
 main_bp = Blueprint('main', __name__)
-download_service = DownloadService()
+# download_service = DownloadService()
 
 
 @main_bp.route('/', methods=['GET', 'POST'])

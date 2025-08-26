@@ -6,7 +6,7 @@ class ProgressHook:
 
     def __init__(self):
         self.progress = {
-            'status': 'downloading',
+            'status': 'not_started',
             'percentage': '0%',
             'downloaded_bytes': 0,
             'total_bytes': 0,
@@ -22,15 +22,16 @@ class ProgressHook:
             self.progress['downloaded_bytes'] = d.get('downloaded_bytes', 0)
             self.progress['total_bytes'] = d.get('total_bytes', 0)
             self.progress['speed'] = d.get('speed', 0)
-            self.progress['filename'] = d.get('filename', '')
-        elif d['status'] == 'finished':
-            self.progress['status'] = 'finished'
-            self.progress['filename'] = d.get('filename', '')
+            self.progress['status'] = d.get('status', 'downloading')
+            # self.progress['filename'] = d.get('filename', '')
+        # elif d['status'] == 'finished':
+        #     self.progress['status'] = 'finished'
+            # self.progress['filename'] = d.get('filename', '')
 
     def reset(self):
         """Reset progress to initial state"""
         self.progress = {
-            'status': 'downloading',
+            'status': 'not_started',
             'percentage': '0%',
             'downloaded_bytes': 0,
             'total_bytes': 0,
