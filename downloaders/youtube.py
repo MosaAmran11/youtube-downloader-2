@@ -147,7 +147,7 @@ class YouTubeDownloader(BaseDownloader):
                 'title': self.info.get('title', 'Unknown Title'),
                 'artist': ', '.join(
                     self.info.get('artists', []) or
-                    self.info.get('uploader', 'Unknown Artist')
+                    [self.info.get('uploader', 'Unknown Artist')]
                 ),
                 'album': self.info.get('album', None) or self.info.get('title', 'Unknown Album'),
                 'date': str(self.info.get('release_year', None) or self.info.get('upload_date', '')[:4]),
@@ -171,6 +171,7 @@ class YouTubeDownloader(BaseDownloader):
                 'postprocessor_args': [
                     '-metadata', f'title={metadata["title"]}',
                     '-metadata', f'artist={metadata["artist"]}',
+                    '-metadata', f'album_artist={metadata["artist"].split(", ")[0]}',
                     '-metadata', f'album={metadata["album"]}',
                     '-metadata', f'date={metadata["date"]}',
                     '-metadata', f'comment=""',  # Avoid adding URL as a comment
